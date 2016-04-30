@@ -1,4 +1,4 @@
 [submodule "chef-repo/cookbooks/bubble"]
 	path = chef-repo/cookbooks/bubble
-	url = git@github.com:MissionCriticalCloud/bubble-cookbook.git
+	url = https://github.com/MissionCriticalCloud/bubble-cookbook.git
 	branch = master

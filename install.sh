@@ -16,7 +16,7 @@ yum -y install git vim curl
 curl -L https://www.opscode.com/chef/install.sh | bash
 
 # Clone the bubble-blueprint repo
-yes | git clone --recursive git@github.com:MissionCriticalCloud/bubble-blueprint.git
+yes | git clone --recursive https://github.com/MissionCriticalCloud/bubble-blueprint.git
 
 # Move to chef-repo
 cd bubble-blueprint/chef-repo
