@@ -3,12 +3,12 @@
 # Resource:: extract
 #
 # Author:: Nathan L Smith (<nathan@cramerdev.com>)
-# Author:: George Miranda (<gmiranda@opscode.com>)
+# Author:: George Miranda (<gmiranda@chef.io>)
 # Author:: Mark Van de Vyver (<mark@taqtiqa.com>)
 #
-# Copyright 2011, Cramer Development, Inc.
-# Copyright 2012, Opscode, Inc.
-# Copyright 2013, TAQTIQA LLC.
+# Copyright:: 2011, Cramer Development, Inc.
+# Copyright:: 2012-2016, Chef Software, Inc.
+# Copyright:: 2013, TAQTIQA LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,27 +23,75 @@
 # limitations under the License.
 #
 
-actions :extract, :extract_local
+property :source,                String, name_property: true
+property :checksum,              String
+property :download_dir,          String, default: Chef::Config[:file_cache_path]
+property :group,                 String, default: 'root'
+property :mode,                  String, default: '0755'
+property :target_dir,            String
+property :creates,               String
+property :compress_char,         String, default: 'z'
+property :tar_flags,             [String, Array], default: []
+property :user,                  String, default: 'root'
+property :headers,               Hash
+property :use_etag,              [TrueClass, FalseClass], default: true
+property :use_last_modified,     [TrueClass, FalseClass], default: true
+property :atomic_update,         [TrueClass, FalseClass], default: true
+property :force_unlink,          [TrueClass, FalseClass], default: false
+property :manage_symlink_source, [TrueClass, FalseClass]
 
-attribute :source,         :kind_of => String, :name_attribute => true
-attribute :checksum,       :kind_of => String
-attribute :download_dir,   :kind_of => String, :default => Chef::Config[:file_cache_path]
-attribute :group,          :kind_of => String, :default => 'root'
-attribute :mode,           :kind_of => String, :default => '0755'
-attribute :target_dir,     :kind_of => String
-attribute :creates,        :kind_of => String
-attribute :compress_char,  :kind_of => String, :default => 'z'
-attribute :tar_flags,      :kind_of => [String, Array], :default => Array.new
-attribute :user,           :kind_of => String, :default => 'root'
+require 'shellwords'
 
-version = Chef::Version.new(Chef::VERSION[/^(\d+\.\d+\.\d+)/, 1])
-if version.major > 11 || (version.major == 11 && version.minor >= 6)
-  attribute :headers, :kind_of => Hash, :default => nil
-  attribute :use_etag, :kind_of => [TrueClass, FalseClass], :default => true
-  attribute :use_last_modified, :kind_of => [TrueClass, FalseClass], :default => true
-  attribute :atomic_update, :kind_of => [TrueClass, FalseClass], :default => true
-  attribute :force_unlink, :kind_of => [TrueClass, FalseClass], :default => false
-  attribute :manage_symlink_source, :kind_of => [TrueClass, FalseClass], :default => nil
+action :extract do
+  r = new_resource
+  basename = ::File.basename(r.name)
+  extname  = ::File.extname(r.name)
+  r.compress_char = '' if extname.casecmp('.xz') == 0
+  local_archive = "#{r.download_dir}/#{basename}"
+
+  directory r.download_dir do
+    recursive true
+  end
+
+  remote_file basename do
+    source r.name
+    checksum r.checksum
+    path local_archive
+    backup false
+    action :create
+    group  r.group
+    owner  r.user
+    mode   r.mode
+    headers r.headers unless r.headers.nil?
+    use_etag r.use_etag
+    use_last_modified r.use_last_modified
+    atomic_update r.atomic_update
+    force_unlink r.force_unlink
+    manage_symlink_source r.manage_symlink_source
+    notifies :run, "execute[extract #{local_archive}]"
+  end
+
+  extract_tar(local_archive, new_resource)
 end
 
-default_action :extract
+action :extract_local do
+  extract_tar(new_resource.name, new_resource)
+end
+
+action_class.class_eval do
+  def extract_tar(local_archive, r)
+    execute "extract #{local_archive}" do
+      flags = if r.tar_flags.is_a?(String)
+                r.tar_flags
+              else
+                r.tar_flags.join(' ')
+              end
+      command "tar xf#{r.compress_char} #{local_archive.shellescape} #{flags}"
+      cwd r.target_dir
+      creates r.creates
+      group  r.group
+      user   r.user
+      action (r.creates || r.not_if.any? || r.only_if.any? ? :run : :nothing)
+    end
+  end
+end

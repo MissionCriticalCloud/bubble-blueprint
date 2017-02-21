@@ -74,7 +74,7 @@ when 'rhel'
       if node['platform_version'] == '7.0.1406'
         %w(nfs-lock.service)
       else
-        %w(nfs-client.target)
+        %w(nfs-config.service nfs-client.target)
       end
   end
 
@@ -134,6 +134,7 @@ when 'debian'
     if Chef::VersionConstraint.new('>= 15.04').include?(node['platform_version'])
       default['nfs']['service']['lock'] = 'rpc-statd'
       default['nfs']['service']['idmap'] = 'nfs-idmapd'
+      default['nfs']['client-services'] = %w(portmap lock nfs-config.service)
     end
   end
 end

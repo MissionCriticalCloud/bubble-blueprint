@@ -1,10 +1,10 @@
 #
 # Author:: Joshua Timberman (<joshua@chef.io>)
 # Author:: Seth Chisamore (<schisamo@chef.io>)
-# Cookbook Name:: chef-client
+# Cookbook::  chef-client
 # Attributes:: default
 #
-# Copyright 2008-2016, Chef Software, Inc.
+# Copyright:: 2008-2016, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the 'License');
 # you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ default['chef_client']['config'] = {
   'chef_server_url' => Chef::Config[:chef_server_url],
   'validation_client_name' => Chef::Config[:validation_client_name],
   'node_name' => Chef::Config[:node_name] == node['fqdn'] ? false : Chef::Config[:node_name],
-  'verify_api_cert' => true
+  'verify_api_cert' => true,
 }
 
 # should the client fork on runs
@@ -45,7 +45,7 @@ default['chef_client']['bin']         = '/usr/bin/chef-client'
 default['chef_client']['log_dir']     = '/var/log/chef'
 
 # If log file is used, default permissions so everyone can read
-default['chef_client']['log_perm'] = 00640
+default['chef_client']['log_perm'] = '640'
 
 # Configuration for chef-client::cron recipe.
 default['chef_client']['cron'] = {
@@ -57,7 +57,7 @@ default['chef_client']['cron'] = {
   'log_file' => '/dev/null',
   'append_log' => false,
   'use_cron_d' => false,
-  'mailto' => nil
+  'mailto' => nil,
 }
 
 # Configuration for Windows scheduled task
@@ -80,6 +80,9 @@ default['chef_client']['daemon_options'] = []
 # Ohai plugins to be disabled are configured in /etc/chef/client.rb,
 # so they can be set as an array in this attribute.
 default['ohai']['disabled_plugins'] = []
+
+# An additional path to load Ohai plugins from.
+default['ohai']['plugin_path'] = nil
 
 # Use logrotate_app definition on supported platforms via config recipe
 # when chef_client['log_file'] is set.

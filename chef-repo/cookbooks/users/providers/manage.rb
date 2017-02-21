@@ -1,9 +1,9 @@
 #
-# Cookbook Name:: users
+# Cookbook:: users
 # Provider:: manage
 #
-# Copyright 2011, Eric G. Wolfe
-# Copyright 2009-2016, Chef Software, Inc.
+# Copyright:: 2011-2016, Eric G. Wolfe
+# Copyright:: 2009-2016, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -101,7 +101,7 @@ action :create do
         owner u['uid'] ? validate_id(u['uid']) : u['username']
         group validate_id(u['gid']) if u['gid']
         mode '0700'
-        only_if { u['ssh_keys'] || u['ssh_private_key'] || u['ssh_public_key'] }
+        only_if { !!(u['ssh_keys'] || u['ssh_private_key'] || u['ssh_public_key']) }
       end
 
       template "#{home_dir}/.ssh/authorized_keys" do
@@ -111,7 +111,7 @@ action :create do
         group validate_id(u['gid']) if u['gid']
         mode '0600'
         variables ssh_keys: u['ssh_keys']
-        only_if { u['ssh_keys'] }
+        only_if { !!(u['ssh_keys']) }
       end
 
       if u['ssh_private_key']

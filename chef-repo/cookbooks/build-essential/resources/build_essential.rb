@@ -1,8 +1,8 @@
 #
-# Cookbook Name:: build-essential
+# Cookbook:: build-essential
 # resource:: build_essential
 #
-# Copyright 2008-2016, Chef Software, Inc.
+# Copyright:: 2008-2016, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -99,9 +99,8 @@ end
 
 # this resource forces itself to run at compile_time
 def after_created
-  if compile_time
-    Array(action).each do |action|
-      run_action(action)
-    end
+  return unless compile_time
+  Array(action).each do |action|
+    run_action(action)
   end
 end

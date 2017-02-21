@@ -1,6 +1,12 @@
 # users Cookbook CHANGELOG
 This file is used to list changes made in each version of the users cookbook.
 
+## 4.0.3 (2016-11-23)
+- Update manage provider to return true/false in guard block which avoids warnings during run on Chef 12.14+
+
+## 4.0.2 (2016-11-18)
+- Deprecate the sysadmins recipe
+
 ## 4.0.1 (2016-09-15)
 - Fix creation of user home directory
 

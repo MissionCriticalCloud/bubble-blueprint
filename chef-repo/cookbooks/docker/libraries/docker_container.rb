@@ -39,7 +39,7 @@ module DockerCookbook
     property :cap_add, NonEmptyArray
     property :cap_drop, NonEmptyArray
     property :cgroup_parent, String, default: ''
-    property :cpu_shares, [Fixnum, nil], default: 0
+    property :cpu_shares, [Integer, nil], default: 0
     property :cpuset_cpus, String, default: ''
     property :detach, Boolean, default: true, desired_state: false
     property :devices, Array, default: []
@@ -56,13 +56,14 @@ module DockerCookbook
     property :ipc_mode, String, default: ''
     property :labels, [String, Array, Hash], default: {}, coerce: proc { |v| coerce_labels(v) }
     property :links, UnorderedArrayType, coerce: proc { |v| coerce_links(v) }
-    property :log_driver, %w( json-file syslog journald gelf fluentd awslogs splunk none ), default: 'json-file', desired_state: false
+    property :log_driver, %w( json-file syslog journald gelf fluentd awslogs splunk etwlogs gcplogs none ), default: 'json-file', desired_state: false
     property :log_opts, [Hash, nil], coerce: proc { |v| coerce_log_opts(v) }, desired_state: false
+    property :ip_address, String
     property :mac_address, String
-    property :memory, Fixnum, default: 0
-    property :memory_swap, Fixnum, default: 0
+    property :memory, Integer, default: 0
+    property :memory_swap, Integer, default: 0
     property :network_disabled, Boolean, default: false
-    property :network_mode, [String, NilClass], default: lazy { default_network_mode }
+    property :network_mode, [String, NilClass], default: 'bridge'
     property :open_stdin, Boolean, default: false, desired_state: false
     property :outfile, [String, NilClass]
     property :port_bindings, PartialHashType, default: {}
@@ -70,13 +71,14 @@ module DockerCookbook
     property :privileged, Boolean, default: false
     property :publish_all_ports, Boolean, default: false
     property :remove_volumes, Boolean
-    property :restart_maximum_retry_count, Fixnum, default: 0
-    property :restart_policy, String, default: 'no'
+    property :restart_maximum_retry_count, Integer, default: 0
+    property :restart_policy, String
     property :ro_rootfs, Boolean, default: false
     property :security_opts, [String, ArrayType]
     property :signal, String, default: 'SIGTERM'
     property :stdin_once, Boolean, default: false, desired_state: false
-    property :timeout, [Fixnum, nil], desired_state: false
+    property :sysctls, Hash, default: {}
+    property :timeout, [Integer, nil], desired_state: false
     property :tty, Boolean, default: false
     property :ulimits, [Array, nil], coerce: proc { |v| coerce_ulimits(v) }
     property :user, String, default: ''
@@ -84,6 +86,7 @@ module DockerCookbook
     property :uts_mode, String, default: ''
     property :volumes, PartialHashType, default: {}, coerce: proc { |v| coerce_volumes(v) }
     property :volumes_from, ArrayType
+    property :volume_driver, String
     property :working_dir, [String, NilClass], default: ''
 
     # Used to store the bind property since binds is an alias to volumes
@@ -130,7 +133,7 @@ module DockerCookbook
       # Go through everything in the container and set corresponding properties:
       # c.info['Config']['ExposedPorts'] -> exposed_ports
       (container.info['Config'].to_a + container.info['HostConfig'].to_a).each do |key, value|
-        next if value.nil? || key == 'RestartPolicy' || key == 'Binds'
+        next if value.nil? || key == 'RestartPolicy' || key == 'Binds' || key == 'ReadonlyRootfs'
 
         # Image => image
         # Set exposed_ports = ExposedPorts (etc.)
@@ -138,10 +141,14 @@ module DockerCookbook
         public_send(property_name, value) if respond_to?(property_name)
       end
 
+      # load container specific labels (without engine/image ones)
+      load_container_labels
+
       # these are a special case for us because our names differ from theirs
       restart_policy container.info['HostConfig']['RestartPolicy']['Name']
       restart_maximum_retry_count container.info['HostConfig']['RestartPolicy']['MaximumRetryCount']
       volumes_binds container.info['HostConfig']['Binds']
+      ro_rootfs container.info['HostConfig']['ReadonlyRootfs']
     end
 
     #########
@@ -166,6 +173,20 @@ module DockerCookbook
       def state
         current_resource ? current_resource.state : {}
       end
+    end
+
+    # Loads container specific labels excluding those of engine or image.
+    # This insures idempotency.
+    def load_container_labels
+      image_labels = Docker::Image.get(container.info['Image'], {}, connection).info['Config']['Labels'] || {}
+      engine_labels = Docker.info(connection)['Labels'] || {}
+
+      labels = (container.info['Config']['Labels'] || {}).reject do |key, val|
+        image_labels.any? { |k, v| k == key && v == val } ||
+          engine_labels.any? { |k, v| k == key && v == val }
+      end
+
+      public_send(:labels, labels)
     end
 
     def validate_container_create
@@ -194,12 +215,9 @@ module DockerCookbook
       if network_mode == 'host' &&
          (
           !(hostname.nil? || hostname.empty?) ||
-          !(dns.nil? || dns.empty?) ||
-          !(dns_search.nil? || dns_search.empty?) ||
-          !(mac_address.nil? || mac_address.empty?) ||
-          !(extra_hosts.nil? || extra_hosts.empty?)
+          !(mac_address.nil? || mac_address.empty?)
          )
-        raise Chef::Exceptions::ValidationFailed, 'Cannot specify hostname, dns, dns_search, mac_address, or extra_hosts when network_mode is host.'
+        raise Chef::Exceptions::ValidationFailed, 'Cannot specify hostname or mac_address when network_mode is host.'
       end
 
       if network_mode == 'container' &&
@@ -274,15 +292,30 @@ module DockerCookbook
               'PublishAllPorts' => publish_all_ports,
               'RestartPolicy'   => {
                 'Name'              => restart_policy,
-                'MaximumRetryCount' => restart_maximum_retry_count
+                'MaximumRetryCount' => restart_maximum_retry_count,
               },
               'ReadonlyRootfs'  => ro_rootfs,
+              'Sysctls'         => sysctls,
               'Ulimits'         => ulimits_to_hash,
               'UsernsMode'      => userns_mode,
               'UTSMode'         => uts_mode,
-              'VolumesFrom'     => volumes_from
-            }
+              'VolumesFrom'     => volumes_from,
+              'VolumeDriver'    => volume_driver,
+            },
           }
+          net_config = {
+            'NetworkingConfig' => {
+              'EndpointsConfig' => {
+                network_mode => {
+                  'IPAMConfig' => {
+                    'IPv4Address' => ip_address,
+                  },
+                },
+              },
+            },
+          } if network_mode
+          config.merge! net_config
+
           Docker::Container.create(config, connection)
         end
       end
@@ -352,6 +385,12 @@ module DockerCookbook
       kill_after_str = " (will kill after #{kill_after}s)" if kill_after != -1
       converge_by "restarting #{container_name} #{kill_after_str}" do
         current_resource ? container.restart('timeout' => kill_after) : call_action(:run)
+      end
+    end
+
+    action :reload do
+      converge_by "reloading #{container_name}" do
+        with_retries { container.kill(signal: 'SIGHUP') }
       end
     end
 

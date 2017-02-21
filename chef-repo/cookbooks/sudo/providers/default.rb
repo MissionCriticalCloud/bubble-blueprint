@@ -1,11 +1,11 @@
 #
 # Author:: Bryan W. Berry (<bryan.berry@gmail.com>)
 # Author:: Seth Vargo (<sethvargo@gmail.com>)
-# Cookbook Name:: sudo
+# Cookbook:: sudo
 # Provider:: default
 #
-# Copyright 2011, Bryan w. Berry
-# Copyright 2012, Seth Vargo
+# Copyright:: 2011-2016, Bryan w. Berry
+# Copyright:: 2012-2016, Seth Vargo
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ def validate_fragment!(resource)
     file.rewind
 
     cmd = Mixlib::ShellOut.new("visudo -cf #{file.path}").run_command
-    unless cmd.exitstatus == 0
+    unless cmd.exitstatus.zero?
       Chef::Log.error("Fragment validation failed: \n\n")
       Chef::Log.error(file.read)
       Chef::Application.fatal!("Template #{file.path} failed fragment validation!")
@@ -124,7 +124,7 @@ end
 
 # Removes a user from the sudoers group
 action :remove do
-  resource = file "#{node['authorization']['sudo']['prefix']}/sudoers.d/#{new_resource.name}" do
+  resource = file "#{node['authorization']['sudo']['prefix']}/sudoers.d/#{sudo_filename}" do
     action :nothing
   end
   resource.run_action(:delete)
@@ -134,9 +134,9 @@ end
 private
 
 # acording to the sudo man pages sudo will ignore files in an include dir that have a `.` or `~`
-# It is quite common for users to have a `.` in their login, so we will convert this to `__`
+# We convert either to `__`
 def sudo_filename
-  new_resource.name.gsub(/\./, '__')
+  new_resource.name.gsub(/[\.~]/, '__')
 end
 
 # Capture a template to a string

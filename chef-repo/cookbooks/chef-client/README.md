@@ -14,6 +14,7 @@ This cookbook is used to configure a system as a Chef Client.
 - FreeBSD 9+
 - Mac OS X
 - openSUSE 13+
+- SLES 12+
 - RHEL 5+
 - Solaris 10+
 - Ubuntu 12.04+
@@ -41,18 +42,17 @@ The following attributes affect the behavior of the chef-client program when run
 
 - `node['chef_client']['interval']` - Sets `Chef::Config[:interval]` via command-line option for number of seconds between chef-client daemon runs. Default 1800.
 - `node['chef_client']['splay']` - Sets `Chef::Config[:splay]` via command-line option for a random amount of seconds to add to interval. Default 300.
-- `node['chef_client']['log_dir']` - Sets directory used in
-- `Chef::Config[:log_location]` via command-line option to a location where chef-client should log output. Default "/var/log/chef".
+- `node['chef_client']['log_dir']` - Sets directory used to store chef-client logs. Default "/var/log/chef".
 - `node['chef_client']['log_rotation']['options']` - Set options to logrotation of chef-client log file. Default `['compress']`.
 - `node['chef_client']['log_rotation']['prerotate']` - Set prerotate action for chef-client logrotation. Default to `nil`.
 - `node['chef_client']['log_rotation']['postrotate']` - Set postrotate action for chef-client logrotation. Default to chef-client service reload depending on init system.
 - `node['chef_client']['conf_dir']` - Sets directory used via command-line option to a location where chef-client search for the client config file . Default "/etc/chef".
 - `node['chef_client']['bin']` - Sets the full path to the `chef-client` binary. Mainly used to set a specific path if multiple versions of chef-client exist on a system or the bin has been installed in a non-sane path. Default "/usr/bin/chef-client".
-- `node['chef_client']['cron']['minute']` - The minute that chef-client will run as a cron task, only applicable if you set `'cron'` as the `'init_style'`
-- `node['chef_client']['cron']['hour']` - The hour that chef-client will run as a cron task, only applicable if you set `'cron'` as the `'init_style'`
-- `node['chef_client']['cron']['weekday']` - The weekday that chef-client will run as a cron task, only applicable if you set `'cron'` as the `'init_style'`
+- `node['chef_client']['cron']['minute']` - The minute that chef-client will run as a cron task. See [cron recipe](#cron)
+- `node['chef_client']['cron']['hour']` - The hour that chef-client will run as a cron task. See [cron recipe](#cron)
+- `node['chef_client']['cron']['weekday']` - The weekday that chef-client will run as a cron task. See [cron recipe](#cron)
 - `node['chef_client']['cron']['environment_variables']` - Environment variables to pass to chef-client's execution (e.g. `SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt` chef-client)
-- `node['chef_client']['cron']['log_file']` - Location to capture the
+- `node['chef_client']['cron']['log_file']` - Location to capture the log output of chef-client during the chef run.
 - `node['chef_client']['cron']['append_log']` - Whether to append to the log. Default: `false` chef-client output.
 - `node['chef_client']['cron']['use_cron_d']` - If true, use the [`cron_d` resource](https://github.com/chef-cookbooks/cron). If false (default), use the cron resource built-in to Chef.
 - `node['chef_client']['cron']['mailto']` - If set, `MAILTO` env variable is set for cron definition
@@ -82,6 +82,7 @@ This cookbook makes use of attribute-driven configuration with this attribute. S
 - `node['chef_client']['config']` - A hash of Chef::Config keys and their values, rendered dynamically in `/etc/chef/client.rb`.
 - `node['chef_client']['load_gems']` - Hash of gems to load into chef via the client.rb file
 - `node['ohai']['disabled_plugins']` - An array of ohai plugins to disable, empty by default, and must be an array if specified. Ohai 6 plugins should be specified as a string (ie. "dmi"). Ohai 7+ plugins should be specified as a symbol within quotation marks (ie. ":Passwd").
+- `node['ohai']['plugin_path']` - An additional path to load Ohai plugins from. Necessary if you use the ohai_plugin resource in the Ohai cookbook to install your own ohai plugins.
 
 ### Chef Client Config
 

@@ -1,9 +1,9 @@
 #
 # Author:: Paul Mooring (<paul@chef.io>)
-# Cookbook Name:: chef
+# Cookbook::  chef
 # Recipe:: task
 #
-# Copyright 2011-2016, Chef Software, Inc.
+# Copyright:: 2011-2016, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -36,11 +36,6 @@ client_cmd << " -s #{node['chef_client']['splay']}"
 
 # Add custom options
 client_cmd << " #{node['chef_client']['daemon_options'].join(' ')}" if node['chef_client']['daemon_options'].any?
-
-log 'debug client_cmd' do
-  message "Final client_cmd: #{client_cmd}"
-  level :debug
-end
 
 start_time = node['chef_client']['task']['frequency'] == 'minute' ? (Time.now + 60 * node['chef_client']['task']['frequency_modifier']).strftime('%H:%M') : nil
 windows_task 'chef-client' do

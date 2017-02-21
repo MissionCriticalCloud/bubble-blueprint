@@ -2,8 +2,106 @@
 
 This file is used to list changes made in each version of the docker cookbook.
 
+## 12.15.2 (2017-02-15)
+- Reverting 12.15.1 changes
+
+## 12.15.1 (2017-02-15)
+- 799 - Adding service restarts to systemd template resources
+
+## 12.15.0 (2017-02-15)
+- Removing dependency on compat_resource.
+- Now requires Chef 12.5 or higher.
+
+## 12.14.3 (2017-02-14)
+- Defaulting package installation version to docker 1.13.1
+
+## 12.14.3 (2017-02-06)
+- Reverting gem vendor due to c extensions in json dep.
+- Using docker-api-1.33.2 in _autoload
+
+## 12.14.2 (2017-01-31)
+- Vendoring docker-api-1.33.2
+
+## 12.14.1 (2017-01-31)
+- defaulting to package installation on amazonlinux
+
+## 2.14.0 (2017-01-31)
+- various updates for Docker 1.13.0
+- defaulting to 1.13.0 for docker_installation
+- package name fixes for new debian/ubuntu schemes
+- defaulting restart_policy to nil in docker_resource
+
+## 2.13.11 (2017-01-25)
+- #798 - Temporary "fix" for delayed service restart: using :immediate
+  notification in docker_service resource
+
+## 2.13.10 (2017-01-13)
+- #800 - fixing ubuntu startup script
+- #802 - using chef_version methong only in 12.6.0 and higher
+
+## 2.13.9 (2016-12-29)
+- 793 - Removing service restarts due to chef-client behavior changes.
+
+## 2.13.8 (2016-12-28)
+- #794 - network mode bridge
+- removing emacs package in upstart provider
+- Adding dokken / travis test matrix
+
+## 2.13.7 (2016-12-24)
+- adding additional logging drivers
+- adding action :reload
+
+## 2.13.6 (2016-12-22)
+- adding ip_address support for docker_containers
+- adding volume_driver support
+
+## 2.13.5 (2016-12-21)
+- Temporary work around for broke upstart provider in chef-client
+- Fixing package name for ubuntu version later than 1.12.3
+
+## 2.13.4 (2016-12-20)
+- Fixing comparison operator docker daemon args for versions < 1.12
+
+## 2.13.3 (2016-12-20)
+- 792 - Reverting 791 fix
+
+## 2.13.2 (2016-12-20)
+- 791 - Fix logic bug in docker_service daemon args calculation
+
+## 2.13.1 (2016-12-19)
+- #786 - Adding options hash to docker_volume connection
+- #787 - Adding wait loop to docker_service_manager_execute :stop
+
+## 2.13.0 (2016-11-25)
+- Adding sysctl property to docker_container resource
+
+## 2.12.0 (2016-11-25)
+- Updating compat_resource dep to 12.16.2
+- Updating docker-api gem dep 1.32.1
+
+## 2.11.1 (2016-11-24)
+- Fix for #701 - Revert commit that caused restart loops in systemd provider
+
+## 2.11.0 (2016-11-23)
+- make systemd MountFlags configurable
+- make running wait time configurable
+
+## 2.10.0 (2016-11-23)
+- Implement network connect/disconnect
+- Fixed dns options mutual exclusion
+- Misc test harness cleanup
+
+## 2.9.10 (2016-11-14)
+-renaming systemd_conf to systemd_args due to a conflict with systemd cookbook
+
+## 2.9.9 (2016-11-14)
+-Fixing resource idempotence in labels property
+-Fix regression introduced by #741, breaking Debian installation
+-Added ro_rootfs => ReadonlyRootfs special cases mapping
+-Enable systemd options as a docker_service attribute
+
 ## 2.9.8 (2016-11-08)
-- Fixed a typo in an error message 
+- Fixed a typo in an error message
 - Enable tarball install through docker_service
 - option log_opt is defined as --log-opt value1 --log-opt value2 instead of --log-opt=value1 --log-opt=value2
 - Depend on a working compat_resource cookbook

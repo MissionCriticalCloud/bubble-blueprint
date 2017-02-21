@@ -2,6 +2,26 @@
 
 This file is used to list changes made in each version of the chef-client cookbook.
 
+## 7.1.0 (2017-01-16)
+
+- Fix some poor wording in the readme due to split lines
+- Remove a debug message in the windows task recipe
+- Add deprecation warning when using the Runit init system
+
+## 7.0.3 (2016-12-06)
+- Fix invalid shell syntax in /etc/init.d script
+
+## 7.0.2 (2016-12-02)
+- Document / test setting a custom ohai plugin path
+- Make log_perm permissions attribute value a string
+- Avoid warnings during ChefSpec runs
+
+## 7.0.1 (2016-12-02)
+- Fixed cron attributes documentation
+- Fix file modes to be strings
+- Added SLES support to the readme
+- Use regex instead of position for service status
+
 ## 7.0.0 (2016-10-25)
 
 ### Breaking Changes

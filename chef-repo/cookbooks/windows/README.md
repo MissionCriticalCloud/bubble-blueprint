@@ -152,7 +152,7 @@ servermanagercmd -query
 
 - **Chef::Provider::WindowsFeature::DISM**: Uses Deployment Image Servicing and Management (DISM) to manage roles/features.
 - **Chef::Provider::WindowsFeature::ServerManagerCmd**: Uses Server Manager to manage roles/features.
-- **Chef::Provider::WindowsFeaturePowershell**: Uses Powershell to manage roles/features. (see [COOK-3714](https://tickets.opscode.com/browse/COOK-3714)
+- **Chef::Provider::WindowsFeaturePowershell**: Uses Powershell to manage roles/features.
 
 #### Examples
 
@@ -235,13 +235,21 @@ Sets the Access Control List for an http URL to grant non-admin accounts permiss
 #### Attribute Parameters
 
 - `url` - the name of the url to be created/deleted.
-- `user` - the name (domain\user) of the user or group to be granted permission to the URL. Mandatory for create. Only one user or group can be granted permission so this replaces any previously defined entry.
+- `sddl` - the DACL string configuring all permissions to URL. Mandatory for create if user is not provided. Can't be use with `user`.
+- `user` - the name (domain\user) of the user or group to be granted permission to the URL. Mandatory for create if sddl is not provided. Can't be use with `sddl`. Only one user or group can be granted permission so this replaces any previously defined entry.
 
 #### Examples
 
 ```ruby
 windows_http_acl 'http://+:50051/' do
     user 'pc\\fred'
+end
+```
+
+```ruby
+# Grant access to users "NT SERVICE\WinRM" and "NT SERVICE\Wecsvc" via sddl
+windows_http_acl 'http://+:5985/' do
+  sddl 'D:(A;;GX;;;S-1-5-80-569256582-2953403351-2909559716-1301513147-412116970)(A;;GX;;;S-1-5-80-4059739203-877974739-1245631912-527174227-2996563517)'
 end
 ```
 
@@ -705,6 +713,54 @@ Do something if a package is installed
 include Windows::Helper
 if is_package_installed?('Windows Software Development Kit')
   # do something if package is installed
+end
+```
+
+### Windows::VersionHelper
+
+Helper that allows you to get information of the windows version running on your node. It leverages windows ohai from kernel.os_info, easy to mock and to use even on linux.
+
+#### core_version?
+
+Determines whether given node is running on a windows Core.
+
+```ruby
+if ::Windows::VersionHelper.core_version? node
+  fail 'Windows Core is not supported'
+end
+```
+
+#### workstation_version?
+
+Determines whether given node is a windows workstation version (XP, Vista, 7, 8, 8.1, 10)
+
+```ruby
+if ::Windows::VersionHelper.workstation_version? node
+  fail 'Only server version of windows are supported'
+end
+```
+
+#### server_version?
+
+Determines whether given node is a windows server version (Server 2003, Server 2008, Server 2012, Server 2016)
+
+```ruby
+if ::Windows::VersionHelper.server_version? node
+  puts 'Server version of windows are cool'
+end
+```
+
+#### nt_version
+
+Determines NT version of the given node
+
+```ruby
+case ::Windows::VersionHelper.nt_version node
+  when '6.0' then 'Windows vista or Server 2008'
+  when '6.1' then 'Windows 7 or Server 2008R2'
+  when '6.2' then 'Windows 8 or Server 2012'
+  when '6.3' then 'Windows 8.1 or Server 2012R2'
+  when '10.0' then 'Windows 10'
 end
 ```
 

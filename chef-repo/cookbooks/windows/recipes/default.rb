@@ -1,6 +1,6 @@
 #
 # Author:: Seth Chisamore (<schisamo@chef.io>)
-# Cookbook Name:: windows
+# Cookbook:: windows
 # Recipe:: default
 #
 # Copyright:: 2011-2016, Chef Software, Inc.
@@ -33,4 +33,10 @@ end
     action :install
     compile_time false
   end
+end
+
+# Install Dism Feature Plugin
+
+ohai_plugin 'dism_features' do
+  compile_time true
 end

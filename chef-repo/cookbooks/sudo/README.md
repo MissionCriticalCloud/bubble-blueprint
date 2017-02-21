@@ -17,6 +17,7 @@ It also exposes an LWRP for adding and managing sudoers.
 - openSUSE / Suse
 
 ### Chef
+
 - Chef 12.1+
 
 ### Cookbooks
@@ -55,28 +56,32 @@ To use attributes for defining sudoers, set the attributes above on the node (or
   "default_attributes": {
     "authorization": {
       "sudo": {
-        "command_aliases": {
+        "command_aliases": [{
           "name": "TEST",
           "command_list": [
             "/usr/bin/ls",
             "/usr/bin/cat"
           ]
-        },
+        }],
         "custom_commands": {
-          "users": {
-            "user": "test_user",
-            "passwordless": true,
-            "command_list": [
-              "TEST"
-            ]
-          },
-          "groups": {
-            "group": "test_group",
-            "passwordless": false,
-            "command_list": [
-              "TEST"
-            ]
-          }
+          "users": [
+            {
+              "user": "test_user",
+              "passwordless": true,
+              "command_list": [
+                "TEST"
+              ]
+            }
+          ],
+          "groups": [
+            {
+              "group": "test_group",
+              "passwordless": false,
+              "command_list": [
+                "TEST"
+              ]
+            }
+          ]
         }
       }
     }
