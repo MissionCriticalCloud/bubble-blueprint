@@ -3,7 +3,7 @@
 # Cookbook:: windows
 # Library:: helper
 #
-# Copyright:: 2011-2016, Chef Software, Inc.
+# Copyright:: 2011-2017, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -70,28 +70,6 @@ module Windows
       URI.parse(URI.escape(source))
     end
 
-    # if a file is local it returns a windows friendly path version
-    # if a file is remote it caches it locally
-    def cached_file(source, checksum = nil, windows_path = true)
-      @installer_file_path ||= begin
-
-        if source =~ /^(file|ftp|http|https):\/\//
-          uri = as_uri(source)
-          cache_file_path = "#{Chef::Config[:file_cache_path]}/#{::File.basename(::URI.unescape(uri.path))}"
-          Chef::Log.debug("Caching a copy of file #{source} at #{cache_file_path}")
-          remote_file cache_file_path do
-            source source
-            backup false
-            checksum checksum unless checksum.nil?
-          end.run_action(:create)
-        else
-          cache_file_path = source
-        end
-
-        windows_path ? win_friendly_path(cache_file_path) : cache_file_path
-      end
-    end
-
     # Expands the environment variables
     def expand_env_vars(path)
       # We pick 32k because that is the largest it could be:
@@ -122,6 +100,12 @@ module Windows
         installed_packages.merge!(extract_installed_packages_from_key(::Win32::Registry::HKEY_CURRENT_USER)) # rescue nil
         installed_packages
       end
+    end
+
+    # Returns an array
+    def to_array(var)
+      var = var.is_a?(Array) ? var : [var]
+      var.reject(&:nil?)
     end
 
     private

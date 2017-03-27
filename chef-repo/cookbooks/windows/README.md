@@ -1,8 +1,8 @@
 # Windows Cookbook
 
-[![Build Status](https://travis-ci.org/chef-cookbooks/windows.svg?branch=master)](http://travis-ci.org/chef-cookbooks/windows) [![Cookbook Version](https://img.shields.io/cookbook/v/windows.svg)](https://supermarket.chef.io/cookbooks/windows)
+[![Build status](https://ci.appveyor.com/api/projects/status/9x4uepmm1g4rktie/branch/master?svg=true)](https://ci.appveyor.com/project/ChefWindowsCookbooks/windows/branch/master) [![Cookbook Version](https://img.shields.io/cookbook/v/windows.svg)](https://supermarket.chef.io/cookbooks/windows)
 
-Provides a set of Windows-specific primitives (Chef resources) meant to aid in the creation of cookbooks/recipes targeting the Windows platform.
+Provides a set of Windows-specific resources to aid in the creation of cookbooks/recipes targeting the Windows platform.
 
 ## Requirements
 
@@ -15,9 +15,9 @@ Provides a set of Windows-specific primitives (Chef resources) meant to aid in t
 
 ### Chef
 
-- Chef 12.1+
+- Chef 12.6+
 
-## Resource/Provider
+## Resources
 
 ### windows_auto_run
 
@@ -26,7 +26,7 @@ Provides a set of Windows-specific primitives (Chef resources) meant to aid in t
 - `:create` - Create an item to be run at login
 - `:remove` - Remove an item that was previously setup to run at login
 
-#### Attribute Parameters
+#### Properties
 
 - `name` - Name attribute. The name of the value to be stored in the registry
 - `program` - The program to be run at login
@@ -46,7 +46,7 @@ end
 
 ### windows_certificate
 
-Installs a certificate into the Windows certificate store from a file, and grants read-only access to the private key for designated accounts. Due to current limitations in winrm, installing certificated remotely may not work if the operation requires a user profile. Operations on the local machine store should still work.
+Installs a certificate into the Windows certificate store from a file, and grants read-only access to the private key for designated accounts. Due to current limitations in WinRM, installing certificated remotely may not work if the operation requires a user profile. Operations on the local machine store should still work.
 
 #### Actions
 
@@ -54,7 +54,7 @@ Installs a certificate into the Windows certificate store from a file, and grant
 - `:delete` - deletes a certificate.
 - `:acl_add` - adds read-only entries to a certificate's private key ACL.
 
-#### Attribute Parameters
+#### Properties
 
 - `source` - name attribute. The source file (for create and acl_add), thumbprint (for delete and acl_add) or subject (for delete).
 - `pfx_password` - the password to access the source if it is a pfx file.
@@ -80,7 +80,7 @@ end
 ```
 
 ```ruby
-# Remove all certicates matching the subject
+# Remove all certificates matching the subject
 windows_certificate "me.acme.com" do
     action :delete
 end
@@ -95,7 +95,7 @@ Binds a certificate to an HTTP port in order to enable TLS communication.
 - `:create` - creates or updates a binding.
 - `:delete` - deletes a binding.
 
-#### Attribute Parameters
+#### Properties
 
 - `cert_name` - name attribute. The thumbprint(hash) or subject that identifies the certificate to be bound.
 - `name_kind` - indicates the type of cert_name. One of :subject (default) or :hash.
@@ -124,39 +124,52 @@ end
 
 ### windows_feature
 
+**BREAKING CHANGE - Version 3.0.0**
+
+This resource has been moved from using LWRPs and multiple providers to using Custom Resources. To maintain functionality, you'll need to change `provider` to `install_method`.
+
 Windows Roles and Features can be thought of as built-in operating system packages that ship with the OS. A server role is a set of software programs that, when they are installed and properly configured, lets a computer perform a specific function for multiple users or other computers within a network. A Role can have multiple Role Services that provide functionality to the Role. Role services are software programs that provide the functionality of a role. Features are software programs that, although they are not directly parts of roles, can support or augment the functionality of one or more roles, or improve the functionality of the server, regardless of which roles are installed. Collectively we refer to all of these attributes as 'features'.
 
 This resource allows you to manage these 'features' in an unattended, idempotent way.
 
-There are two providers for the `windows_features` which map into Microsoft's two major tools for managing roles/features: [Deployment Image Servicing and Management (DISM)](http://msdn.microsoft.com/en-us/library/dd371719%28v=vs.85%29.aspx) and [Servermanagercmd](http://technet.microsoft.com/en-us/library/ee344834%28WS.10%29.aspx) (The CLI for Server Manager). As Servermanagercmd is deprecated, Chef will set the default provider to `Chef::Provider::WindowsFeature::DISM` if DISM is present on the system being configured. The default provider will fall back to `Chef::Provider::WindowsFeature::ServerManagerCmd`.
+There are three methods for the `windows_feature` which map into Microsoft's three major tools for managing roles/features: [Deployment Image Servicing and Management (DISM)](http://msdn.microsoft.com/en-us/library/dd371719%28v=vs.85%29.aspx), [Servermanagercmd](http://technet.microsoft.com/en-us/library/ee344834%28WS.10%29.aspx) (The CLI for Server Manager), and [PowerShell](https://technet.microsoft.com/en-us/library/cc731774(v=ws.11).aspx). As Servermanagercmd is deprecated, Chef will set the default method to `:windows_feature_dism` if `dism.exe` is present on the system being configured. The default method will fall back to `:windows_feature_servermanagercmd`, and then `:windows_feature_powershell`.
 
 For more information on Roles, Role Services and Features see the [Microsoft TechNet article on the topic](http://technet.microsoft.com/en-us/library/cc754923.aspx). For a complete list of all features that are available on a node type either of the following commands at a command prompt:
 
+For Dism:
+
 ```text
 dism /online /Get-Features
+```
+
+For ServerManagerCmd:
+
+```text
 servermanagercmd -query
+```
+
+For PowerShell:
+
+```text
+get-windowsfeature
 ```
 
 #### Actions
 
 - `:install` - install a Windows role/feature
 - `:remove` - remove a Windows role/feature
+- `:delete` - remove a Windows role/feature from the image (not supported by ServerManagerCmd)
 
-#### Attribute Parameters
+#### Properties
 
-- `feature_name` - name of the feature/role to install. The same feature may have different names depending on the provider used (ie DHCPServer vs DHCP; DNS-Server-Full-Role vs DNS).
-- `all` - Boolean. Optional. Default: false. DISM provider only. Forces all dependencies to be installed.
+- `feature_name` - name of the feature/role(s) to install. The same feature may have different names depending on the provider used (ie DHCPServer vs DHCP; DNS-Server-Full-Role vs DNS).
+- `all` - Boolean. Optional. Default: false. DISM and Powershell providers only. Forces all dependencies to be installed.
 - `source` - String. Optional. DISM provider only. Uses local repository for feature install.
-
-#### Providers
-
-- **Chef::Provider::WindowsFeature::DISM**: Uses Deployment Image Servicing and Management (DISM) to manage roles/features.
-- **Chef::Provider::WindowsFeature::ServerManagerCmd**: Uses Server Manager to manage roles/features.
-- **Chef::Provider::WindowsFeaturePowershell**: Uses Powershell to manage roles/features.
+- `install_method` - Symbol. Optional. **REPLACEMENT FOR THE PREVIOUS PROVIDER OPTION** If not supplied, Chef will determine which method to use (in the order of `:windows_feature_dism`, `:windows_feature_servercmd`, `:windows_feature_powershell`)
 
 #### Examples
 
-Enable the node as a DHCP Server
+Install the DHCP Server feature
 
 ```ruby
 windows_feature 'DHCPServer' do
@@ -164,15 +177,7 @@ windows_feature 'DHCPServer' do
 end
 ```
 
-Enable TFTP
-
-```ruby
-windows_feature 'TFTP' do
-  action :install
-end
-```
-
-Enable .Net 3.5.1 on Server 2012 using repository files on DVD and install all dependencies
+Install the .Net 3.5.1 feature on Server 2012 using repository files on DVD and install all dependencies
 
 ```ruby
 windows_feature "NetFx3" do
@@ -182,23 +187,30 @@ windows_feature "NetFx3" do
 end
 ```
 
-Disable Telnet client/server
+Remove Telnet Server and Client features
 
 ```ruby
-%w[TelnetServer TelnetClient].each do |feature|
-  windows_feature feature do
-    action :remove
-  end
+windows_feature ['TelnetServer', 'TelnetClient'] do
+  action :remove
 end
 ```
 
-Add SMTP Feature with powershell provider
+Add the SMTP Server feature using the PowerShell provider
 
 ```ruby
 windows_feature "smtp-server" do
   action :install
   all true
-  provider :windows_feature_powershell
+  install_method :windows_feature_powershell
+end
+```
+
+Install multiple features using one resource with the PowerShell provider
+
+```ruby
+windows_feature ['Web-Asp-Net45', 'Web-Net-Ext45'] do
+  action :install
+  install_method :windows_feature_powershell
 end
 ```
 
@@ -212,9 +224,9 @@ Font files should be included in the cookbooks
 
 - `:install` - install a font to the system fonts directory.
 
-#### Attribute Parameters
+#### Properties
 
-- `file` - The name of the font file name to install. The path defaults to the files/default directory of the cookbook you're calling windows_font from. Defaults to the resource name.
+- `name` - The file name of the font file name to install. The path defaults to the files/default directory of the cookbook you're calling windows_font from. Defaults to the resource name.
 - `source` - Set an alternate path to the font file.
 
 #### Examples
@@ -232,7 +244,7 @@ Sets the Access Control List for an http URL to grant non-admin accounts permiss
 - `:create` - creates or updates the ACL for a URL.
 - `:delete` - deletes the ACL from a URL.
 
-#### Attribute Parameters
+#### Properties
 
 - `url` - the name of the url to be created/deleted.
 - `sddl` - the DACL string configuring all permissions to URL. Mandatory for create if user is not provided. Can't be use with `user`.
@@ -259,121 +271,6 @@ windows_http_acl 'http://+:50051/' do
 end
 ```
 
-### windows_package
-
-This resource is now deprecated and will be removed in a future version of this cookbook. Chef >= 12.6.0 includes a built-in [package](https://docs.chef.io/resource_windows_package.html) resource.
-
-Manage Windows application packages in an unattended, idempotent way.
-
-The following application installers are currently supported:
-
-- MSI packages
-- InstallShield
-- Wise InstallMaster
-- Inno Setup
-- Nullsoft Scriptable Install System
-
-If the proper installer type is not passed into the resource's installer_type attribute, the provider will do it's best to identify the type by introspecting the installation package. If the installation type cannot be properly identified the `:custom` value can be passed into the installer_type attribute along with the proper flags for silent/quiet installation (using the `options` attribute..see example below).
-
-**PLEASE NOTE** - For proper idempotence the resource's `package_name` should be the same as the 'DisplayName' registry value in the uninstallation data that is created during package installation. The easiest way to definitively find the proper 'DisplayName' value is to install the package on a machine and search for the uninstall information under the following registry keys:
-
-- `HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Uninstall`
-- `HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Uninstall`
-- `HKEY_LOCAL_MACHINE\Software\Wow6464Node\Microsoft\Windows\CurrentVersion\Uninstall`
-
-For maximum flexibility the `source` attribute supports both remote and local installation packages.
-
-#### Actions
-
-- `:install` - install a package
-- `:remove` - remove a package. The remove action is completely hit or miss as many application uninstallers do not support a full silent/quiet mode.
-
-#### Attribute Parameters
-
-- `package_name` - name attribute. The 'DisplayName' of the application installation package.
-- `source` - The source of the windows installer. This can either be a URI or a local path.
-- `installer_type` - They type of windows installation package. Valid values include :msi, :inno, :nsis, :wise, :installshield, :custom. If this value is not provided, the provider will do it's best to identify the installer type through introspection of the file.
-- `checksum` - useful if source is remote, the SHA-256 checksum of the file--if the local file matches the checksum, Chef will not download it
-- `options` - Additional options to pass the underlying installation command
-- `timeout` - set a timeout for the package download (default 600 seconds)
-- `version` - The version number of this package, as indicated by the 'DisplayVersion' value in one of the 'Uninstall' registry keys. If the given version number does equal the 'DisplayVersion' in the registry, the package will be installed.
-- `success_codes` - set an array of possible successful installation return codes. Previously this was hardcoded, but certain MSIs may have a different return code, e.g. 3010 for reboot required. Must be an array, and defaults to `[0, 42, 127]`.
-
-#### Examples
-
-Install PuTTY (InnoSetup installer)
-
-```ruby
-windows_package 'PuTTY version 0.60' do
-  source 'http://the.earth.li/~sgtatham/putty/latest/x86/putty-0.60-installer.exe'
-  installer_type :inno
-  action :install
-end
-```
-
-Install 7-Zip (MSI installer)
-
-```ruby
-windows_package '7-Zip 9.20 (x64 edition)' do
-  source 'http://downloads.sourceforge.net/sevenzip/7z920-x64.msi'
-  action :install
-end
-```
-
-Install Notepad++ (Y U No Emacs?) using a local installer
-
-```ruby
-windows_package 'Notepad++' do
-  source 'c:/installation_files/npp.5.9.2.Installer.exe'
-  action :install
-end
-```
-
-Install VLC for that Xvid (NSIS installer)
-
-```ruby
-windows_package 'VLC media player 1.1.10' do
-  source 'http://superb-sea2.dl.sourceforge.net/project/vlc/1.1.10/win32/vlc-1.1.10-win32.exe'
-  action :install
-end
-```
-
-Install Firefox as custom installer and manually set the silent install flags
-
-```ruby
-windows_package 'Mozilla Firefox 5.0 (x86 en-US)' do
-  source 'http://archive.mozilla.org/pub/mozilla.org/mozilla.org/firefox/releases/5.0/win32/en-US/Firefox%20Setup%205.0.exe'
-  options '-ms'
-  installer_type :custom
-  action :install
-end
-```
-
-Google Chrome FTW (MSI installer)
-
-```ruby
-windows_package 'Google Chrome' do
-  source 'https://dl-ssl.google.com/tag/s/appguid%3D%7B8A69D345-D564-463C-AFF1-A69D9E530F96%7D%26iid%3D%7B806F36C0-CB54-4A84-A3F3-0CF8A86575E0%7D%26lang%3Den%26browser%3D3%26usagestats%3D0%26appname%3DGoogle%2520Chrome%26needsadmin%3Dfalse/edgedl/chrome/install/GoogleChromeStandaloneEnterprise.msi'
-  action :install
-end
-```
-
-Remove Google Chrome
-
-```ruby
-windows_package 'Google Chrome' do
-  action :remove
-end
-```
-
-Remove 7-Zip
-
-```ruby
-windows_package '7-Zip 9.20 (x64 edition)' do
-  action :remove
-end
-```
-
 ### windows_printer_port
 
 Create and delete TCP/IPv4 printer ports.
@@ -383,7 +280,7 @@ Create and delete TCP/IPv4 printer ports.
 - `:create` - Create a TCIP/IPv4 printer port. This is the default action.
 - `:delete` - Delete a TCIP/IPv4 printer port
 
-#### Attribute Parameters
+#### Properties
 
 - `ipv4_address` - Name attribute. Required. IPv4 address, e.g. '10.0.24.34'
 - `port_name` - Port name. Optional. Defaults to 'IP_' + `ipv4_address`
@@ -440,7 +337,7 @@ The Windows Printer LWRP will automatically create a TCP/IP printer port for you
 - `:create` - Create a new printer
 - `:delete` - Delete a new printer
 
-#### Attribute Parameters
+#### Properties
 
 - `device_id` - Name attribute. Required. Printer queue name, e.g. 'HP LJ 5200 in fifth floor copy room'
 - `comment` - Optional string describing the printer queue.
@@ -472,6 +369,41 @@ windows_printer 'HP LaserJet 5th Floor' do
 end
 ```
 
+### windows_share
+
+Creates, modifies and removes Windows shares. All properties are idempotent.
+
+#### Actions
+
+- :create: creates/modifies a share
+- :delete: deletes a share
+
+#### Properties
+
+- share_name: name attribute, the share name.
+- path: path to the directory to be shared. Required when creating. If the share already exists on a different path then it is deleted and re-created.
+- description: description to be applied to the share
+- full_users: array of users which should have "Full control" permissions
+- change_users: array of users which should have "Change" permissions
+- read_users: array of users which should have "Read" permissions
+
+#### Examples
+
+```ruby
+windows_share "foo" do
+  action :create
+  path "C:\\foo"
+  full_users ["DOMAIN_A\\some_user", "DOMAIN_B\\some_other_user"]
+  read_users ["DOMAIN_C\\Domain users"]
+end
+```
+
+```ruby
+windows_share "foo" do
+  action :delete
+end
+```
+
 ### windows_shortcut
 
 Creates and modifies Windows shortcuts.
@@ -480,7 +412,7 @@ Creates and modifies Windows shortcuts.
 
 - `:create` - create or modify a windows shortcut
 
-#### Attribute Parameters
+#### Properties
 
 - `name` - name attribute. The shortcut to create/modify.
 - `target` - what the shortcut links to
@@ -519,7 +451,7 @@ BgInfo = Registry.get_value('HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run'
 - `:add` - Add an item to the system path
 - `:remove` - Remove an item from the system path
 
-#### Attribute Parameters
+#### Properties
 
 - `path` - Name attribute. The name of the value to add to the system path
 
@@ -555,7 +487,7 @@ Creates, deletes or runs a Windows scheduled task. Requires Windows Server 2008 
 - `:enable` - enable a task
 - `:disable` - disable a task
 
-#### Attribute Parameters
+#### Properties
 
 - `task_name` - name attribute, The task name. ("Task Name" or "/Task Name")
 - `force` - When used with create, will update the task.
@@ -634,7 +566,7 @@ Most version of Windows do not ship with native cli utility for managing compres
 - `:unzip` - unzip a compressed file
 - `:zip` - zip a directory (recursively)
 
-#### Attribute Parameters
+#### Properties
 
 - `path` - name attribute. The path where files will be (un)zipped to.
 - `source` - source of the zip file (either a URI or local path) for :unzip, or directory to be zipped for :zip.
@@ -785,8 +717,16 @@ expect(chef_run).to install_windows_package('Node.js').with(
 - create_windows_certificate_binding
 - delete_windows_certificate_binding
 - install_windows_feature
+- install_windows_feature_dism
+- install_windows_feature_servermanagercmd
+- install_windows_feature_powershell
 - remove_windows_feature
+- remove_windows_feature_dism
+- remove_windows_feature_servermanagercmd
+- remove_windows_feature_powershell
 - delete_windows_feature
+- delete_windows_feature_dism
+- delete_windows_feature_powershell
 - install_windows_font
 - create_windows_http_acl
 - delete_windows_http_acl
@@ -817,10 +757,6 @@ Place an explicit dependency on this cookbook (using depends in the cookbook's m
 ```ruby
 depends 'windows'
 ```
-
-### default
-
-Convenience recipe that installs supporting gems for many of the resources/providers that ship with this cookbook.
 
 ## License & Authors
 
