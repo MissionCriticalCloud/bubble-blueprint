@@ -2,9 +2,22 @@
 
 This file is used to list changes made in each version of the chef-client cookbook.
 
+## 8.0.0 (2017-04-04)
+
+- Allow to use systemd timer instead of chef-client daemon mode
+- Remove compat_resource dependency and require Chef 12.11+
+- Switch from which to shell-out and remove Chef 10 compatibility code
+
+## 7.2.1 (2017-03-29)
+
+- Testing updates for Chef 13
+- Test with local delivery and not Rake
+- Disable chef-client service if it exists in the windows schedule task recipe
+- Update cron recipe to use shard_seed when available, and node.name when not.
+
 ## 7.2.0 (2017-02-24)
 
-- Add a chef_client_windows_task custom resource. This is is used by the 'task' recipe, but can also be used directly in a wrapper cookbook. Why would I want to use this? Well when used in a wrapper cookbook you can directly pass the username/password to the resource, thus avoiding node attributes. This means you can store your credentials in any secure method you want.
+- Add a chef_client_scheduled_task custom resource. This is is used by the 'task' recipe, but can also be used directly in a wrapper cookbook. Why would I want to use this? Well when used in a wrapper cookbook you can directly pass the username/password to the resource, thus avoiding node attributes. This means you can store your credentials in any secure method you want.
 
 ## 7.1.0 (2017-01-16)
 
@@ -13,14 +26,17 @@ This file is used to list changes made in each version of the chef-client cookbo
 - Add deprecation warning when using the Runit init system
 
 ## 7.0.3 (2016-12-06)
+
 - Fix invalid shell syntax in /etc/init.d script
 
 ## 7.0.2 (2016-12-02)
+
 - Document / test setting a custom ohai plugin path
 - Make log_perm permissions attribute value a string
 - Avoid warnings during ChefSpec runs
 
 ## 7.0.1 (2016-12-02)
+
 - Fixed cron attributes documentation
 - Fix file modes to be strings
 - Added SLES support to the readme
@@ -42,10 +58,12 @@ This file is used to list changes made in each version of the chef-client cookbo
 ## 6.0.0 (2016-09-26)
 
 ### Breaking Changes
+
 - Support for Chef 11 has been removed. Chef 12.1 or later is now required
 - Running chef-client as a service on Windows has been deprecated. The default.rb recipe will now include the task recipe on Windows hosts. The windows_service recipe will be removed in the next major version of this cookbook.
 
 ### Other Changes
+
 - Switch from serverspec to Inspec
 - Add BSDs to bsd_init to fix cron service
 - Simplified attributes for Chef 12 - Chef 12 lets us simplify attributes since we don't have to check to see if we can fork and we can assume we know the init type via Ohai

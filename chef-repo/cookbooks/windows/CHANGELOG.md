@@ -2,6 +2,19 @@
 
 This file is used to list changes made in each version of the windows cookbook.
 
+## 3.0.5 (2017-04-07)
+
+- Add support for windows_task resource to run on non-English editions of Windows
+- Ensure chef-client 12.6 compatibility with action_class.class_eval
+
+## 3.0.4 (2017-03-29)
+
+- restoring the `cached_file` helper as downstream cookbooks use it.
+
+## 3.0.3 (2017-03-28)
+
+- Correct a typo in a Log message
+
 ## 3.0.2 (2017-03-21)
 
 - Fix `windows_zipfile` resource to properly download and cache the zip archives
