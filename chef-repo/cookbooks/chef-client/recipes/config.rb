@@ -5,8 +5,8 @@
 # Cookbook::  chef-client
 # Recipe:: config
 #
-# Copyright:: 2008-2016, Chef Software, Inc.
-# Copyright:: 2009, 37signals
+# Copyright:: 2008-2017, Chef Software, Inc.
+# Copyright:: 2009-2017, 37signals
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ if node['chef_client']['log_file'].is_a?(String) && node['chef_client']['init_st
   node.default['chef_client']['config']['log_location'] = log_path
 
   case node['platform_family']
-  when 'rhel', 'debian', 'fedora'
+  when 'amazon', 'rhel', 'debian', 'fedora'
     logrotate_app 'chef-client' do
       path [log_path]
       rotate node['chef_client']['logrotate']['rotate']

@@ -690,7 +690,7 @@ public registry vs a private one.
 ### Actions
 
 The following actions are available for a `docker_image`
-resource. Defaults to `pull_if_missing`
+resource. Defaults to `pull`
 
 - `:pull` - Pulls an image from the registry
 - `:pull_if_missing` - Pulls an image from the registry, only if it missing
@@ -1113,7 +1113,7 @@ docker_container 'syslogger' do
   tag '3.1'
   command 'nc -ll -p 780 -e /bin/cat'
   log_driver 'syslog'
-  log_opts 'syslog-tag=container-syslogger'
+  log_opts 'tag=container-syslogger'
 end
 ```
 

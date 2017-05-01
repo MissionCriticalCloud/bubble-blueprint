@@ -2,6 +2,20 @@
 
 This file is used to list changes made in each version of the docker cookbook.
 
+## 12.15.5 (2017-04-19)
+- Fixing up memory related API keys
+- Adding KernelMemory
+- Adding MemorySwappiness
+- Adding MemoryReservation
+- Fixing MemorySwap convergatude (bug #833)
+- Allowing for both integer and string input for all memory values
+
+## 12.15.4 (2017-04-19)
+- Fixing security_opt property
+
+## 12.15.3 (2017-04-18)
+- Updating for 17.04.0
+
 ## 12.15.2 (2017-02-15)
 - Reverting 12.15.1 changes
 

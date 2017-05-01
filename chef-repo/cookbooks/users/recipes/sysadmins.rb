@@ -2,8 +2,8 @@
 # Cookbook:: users
 # Recipe:: sysadmins
 #
-# Copyright:: 2011-2016, Eric G. Wolfe
-# Copyright:: 2009-2016, Chef Software, Inc.
+# Copyright:: 2011-2017, Eric G. Wolfe
+# Copyright:: 2009-2017, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,11 +18,4 @@
 # limitations under the License.
 #
 
-Chef::Log.warn('The sysadmins recipe has been deprecated. We suggest using the users_manage resource in your own cookbook if you need similar functionality. The resource in this recipe will be removed with a major release of the cookbook in April 2017')
-
-# Searches data bag "users" for groups attribute "sysadmin".
-# Places returned users in Unix group "sysadmin" with GID 2300.
-users_manage 'sysadmin' do
-  group_id 2300
-  action [:remove, :create]
-end
+Chef::Log.warn('The sysadmins recipe has been deprecated. We suggest using the users_manage resource in your own cookbook if you need similar functionality.')

@@ -47,7 +47,7 @@ def validate_fragment!(resource)
     file.rewind
 
     cmd = Mixlib::ShellOut.new("visudo -cf #{file.path}").run_command
-    unless cmd.exitstatus.zero?
+    unless cmd.exitstatus == 0
       Chef::Log.error("Fragment validation failed: \n\n")
       Chef::Log.error(file.read)
       Chef::Application.fatal!("Template #{file.path} failed fragment validation!")
@@ -77,7 +77,7 @@ def render_sudoer
       action :nothing
     end
   else
-    sudoer = new_resource.user || "%#{new_resource.group}".squeeze('%')
+    sudoer = new_resource.user || ("%#{new_resource.group}".squeeze('%') if new_resource.group)
 
     resource = template "#{node['authorization']['sudo']['prefix']}/sudoers.d/#{sudo_filename}" do
       source 'sudoer.erb'
