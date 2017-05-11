@@ -2,6 +2,23 @@
 
 This file is used to list changes made in each version of the chef-client cookbook.
 
+## 8.1.1 (2017-05-10)
+
+- Default the systemd restart behavior to always
+
+## 8.1.0 (2017-05-09)
+
+- Allow controlling systemd restart setting through an attribute
+- Do not enable the service if systemd timer is used
+- Add an example of setting up logging to the Event Viewer on Windows
+- Resolve Chef 13 failures when setting up Scheduled Tasks on Windows
+
+## 8.0.2 (2017-05-02)
+
+- Remove the suggests ‘runit’ from the metadata
+- Require a more modern windows and cron cookbook
+- Make sure SLES 11 gets the right init system
+
 ## 8.0.1 (2017-04-13)
 
 - Make chef_client_scheduled_task idempotent

@@ -457,6 +457,7 @@ options found in the
 - `log_driver` - Container's logging driver (json-file/syslog/journald/gelf/fluentd/awslogs/splunk/etwlogs/gcplogs/none)
 - `log_opts` - Container's logging driver options (driver-specific)
 - `mtu` - Set the containers network MTU
+- `package_name` - Set the package name. Defaults to `docker-engine`
 - `pidfile` - Path to use for daemon PID file
 - `registry_mirror` - Preferred Docker registry mirror
 - `storage_driver` - Storage driver to use
@@ -1160,6 +1161,7 @@ Most `docker_container` properties are the `snake_case` version of the `CamelCas
 - `memory_swap` - Total memory limit (memory + swap); set `-1` to disable swap limit (unlimited). You must use this with memory and make the swap value larger than memory.
 - `network_disabled` - Boolean to disable networking. Defaults to `false`.
 - `network_mode` - Sets the networking mode for the container. One of `bridge`, `host`, `container`.
+- `network_aliases` - Adds network-scoped alias for the container in form `['alias-1', 'alias-2']`.
 - `open_stdin` - Boolean value, opens stdin. Defaults to `false`.
 - `outfile` - The path to write the file when using `:export` action.
 - `port` - The port configuration to use in the container. Matches the syntax used by the `docker` CLI tool.

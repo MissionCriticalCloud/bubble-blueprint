@@ -62,6 +62,8 @@ default['chef_client']['cron'] = {
 
 # Configuration for chef-client::systemd_service recipe
 default['chef_client']['systemd']['timer'] = false
+# Restart mode when not running as a timer
+default['chef_client']['systemd']['restart'] = 'always'
 
 # Configuration for Windows scheduled task
 default['chef_client']['task']['frequency'] = 'minute'
@@ -107,7 +109,7 @@ when 'debian'
   default['chef_client']['cache_path']  = '/var/cache/chef'
   default['chef_client']['backup_path'] = '/var/lib/chef'
 when 'suse'
-  default['chef_client']['init_style']  = 'systemd'
+  default['chef_client']['init_style']  = node['init_package']
   default['chef_client']['run_path']    = '/var/run/chef'
   default['chef_client']['cache_path']  = '/var/cache/chef'
   default['chef_client']['backup_path'] = '/var/lib/chef'
