@@ -20,13 +20,14 @@ default['sysctl']['params'] = {}
 default['sysctl']['allow_sysctl_conf'] = false
 default['sysctl']['conf_file'] = '/etc/sysctl.conf'
 default['sysctl']['conf_dir'] = nil
+default['sysctl']['restart_procps'] = true
 
 if platform_family?('freebsd')
   default['sysctl']['allow_sysctl_conf'] = true
   default['sysctl']['conf_file'] = '/etc/sysctl.conf.local'
 end
 
-if platform_family?('arch', 'debian', 'rhel', 'fedora')
+if platform_family?('arch', 'debian', 'rhel', 'fedora', 'amazon')
   default['sysctl']['conf_dir'] = '/etc/sysctl.d'
   default['sysctl']['conf_file'] = File.join(node['sysctl']['conf_dir'], '/99-chef-attributes.conf')
 end

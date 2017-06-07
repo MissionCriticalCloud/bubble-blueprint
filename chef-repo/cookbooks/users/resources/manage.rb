@@ -97,6 +97,7 @@ action :create do
         owner u['uid'] ? validate_id(u['uid']) : u['username']
         group validate_id(u['gid']) if u['gid']
         mode '0600'
+        sensitive true
         variables ssh_keys: u['ssh_keys']
         only_if { !!(u['ssh_keys']) }
       end
@@ -157,7 +158,7 @@ action :remove do
   end
 end
 
-action_class.class_eval do
+action_class do
   include ::Users::Helpers
   include ::Users::OsxHelper
 
