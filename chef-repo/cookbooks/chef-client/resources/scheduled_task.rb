@@ -19,7 +19,7 @@
 
 provides :chef_client_scheduled_task
 
-property :user, String, required: true
+property :user, String, default: 'System'
 property :password, String
 property :frequency, String, default: 'minute'
 property :frequency_modifier, Integer, default: 30
@@ -35,7 +35,7 @@ action :add do
 
   # Build command line to pass to cmd.exe
   client_cmd = new_resource.chef_binary_path.dup
-  client_cmd << " -L #{::File.join(new_resource.log_directory, 'client.log')}"
+  client_cmd << " -L #{::File.join(new_resource.log_directory, node['chef_client']['log_file'])}"
   client_cmd << " -c #{::File.join(new_resource.config_directory, 'client.rb')}"
   client_cmd << " -s #{new_resource.splay}"
 
@@ -57,6 +57,6 @@ end
 
 action :remove do
   windows_task 'chef-client' do
-    action :remove
+    action :delete
   end
 end

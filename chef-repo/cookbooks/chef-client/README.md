@@ -42,6 +42,7 @@ The following attributes affect the behavior of the chef-client program when run
 
 - `node['chef_client']['interval']` - Sets `Chef::Config[:interval]` via command-line option for number of seconds between chef-client daemon runs. Default 1800.
 - `node['chef_client']['splay']` - Sets `Chef::Config[:splay]` via command-line option for a random amount of seconds to add to interval. Default 300.
+- `node['chef_client']['log_file']` - Sets the file name used to store chef-client logs. Default "client.log".
 - `node['chef_client']['log_dir']` - Sets directory used to store chef-client logs. Default "/var/log/chef".
 - `node['chef_client']['log_rotation']['options']` - Set options to logrotation of chef-client log file. Default `['compress']`.
 - `node['chef_client']['log_rotation']['prerotate']` - Set prerotate action for chef-client logrotation. Default to `nil`.
@@ -59,6 +60,7 @@ The following attributes affect the behavior of the chef-client program when run
 - `node['chef_client']['reload_config']` - If true, reload Chef config of current Chef run when `client.rb` template changes (defaults to true)
 - `node['chef_client']['daemon_options']` - An array of additional options to pass to the chef-client service, empty by default, and must be an array if specified.
 - `node['chef_client']['systemd']['timer']` - If true, uses systemd timer to run chef frequently instead of chef-client daemon mode (defaults to false). This only works on platforms where systemd is installed and used.
+- `node['chef_client']['systemd']['timeout']` - If configured, sets the systemd timeout. This might be useful to avoid stalled chef runs in the systemd timer setup.
 - `node['chef_client']['systemd']['restart']` - The string to use for systemd `Restart=` value when not running as a timer. Defaults to `always`. Other possible options: `no, on-success, on-failure, on-abnormal, on-watchdog, on-abort`.
 - `node['chef_client']['task']['frequency']` - Frequency with which to run the `chef-client` scheduled task (e.g., `'hourly'`, `'daily'`, etc.) Default is `'minute'`.
 - `node['chef_client']['task']['frequency_modifier']` - Numeric value to go with the scheduled task frequency. Default is `node['chef_client']['interval'].to_i / 60`
@@ -88,18 +90,14 @@ This cookbook makes use of attribute-driven configuration with this attribute. S
 
 ### Chef Client Config
 
-The following attributes should be set using `['chef_client']['config']`. Setting them at the `['chef_client']` attribute level is **deprecated**.
+[For the most current information about Chef Client configuration, read the documentation.](https://docs.chef.io/config_rb_client.html).
 
-- `node['chef_client']['environment']` - Set the node's environment directly (useful for unattended installs when `knife bootstrap -E` is not an option).
-- `node['chef_client']['log_level']` - Not set anymore, use the default log level and output formatting in Chef 11+.
-- `node['chef_client']['server_url']` - Set by default with
-- `node['chef_client']['config']['chef_server_url']`
-- `node['chef_client']['validation_client_name']` - Set by default with `node['chef_client']['config']['validation_client_name']`.
-- `node['chef_client']['report_handlers']` - See [USAGE](#usage) for how to set handlers with the `config` attribute.
-- `node['chef_client']['exception_handlers']` - See [USAGE](#usage) for how to set handlers with the `config` attribute.
-- `node['chef_client']['checksum_cache_path']` - Use
-- `node['chef_client']['config']['cache_options']['path']`.
-- `node['chef_client']['verbose_logging']` - Not set anymore, we recommend using the default log level and output formatting in Chef 11+. This can still be set using `node['chef_client']['config']['verbose_logging']` if required.
+- `node['chef_client']['config']['chef_server_url']` - The URL for the Chef server.
+- `node['chef_client']['config']['validation_client_name']` - The name of the chef-validator key that is used by the chef-client to access the Chef server during the initial chef-client run.
+- `node['chef_client']['config']['verbose_logging']` - Set the log level. Options: true, nil, and false. When this is set to false, notifications about individual resources being processed are suppressed (and are output at the :info logging level). Setting this to false can be useful when a chef-client is run as a daemon. Default value: nil.
+- `node['chef_client']['config']['rubygems_url']` - The location to source rubygems. It can be set to a string or array of strings for URIs to set as rubygems sources. This allows individuals to setup an internal mirror of rubygems for "airgapped" environments. Default value: ``https://www.rubygems.org``.
+
+* See [USAGE](#usage) for how to set handlers with the `config` attribute.
 
 ## Recipes
 
@@ -369,9 +367,12 @@ The chef_client_scheduled_task setups up chef-client to run as a scheduled task.
 - `chef_binary_path` - The path to the chef-client binary. default: 'C:/opscode/chef/bin/chef-client'
 - `daemon_options` - An optional array of extra options to pass to the chef-client
 
-## License & Authors
 
-**Author:** Cookbook Engineering Team ([cookbooks@chef.io](mailto:cookbooks@chef.io))
+## Maintainers
+
+This cookbook is maintained by Chef's Community Cookbook Engineering team. Our goal is to improve cookbook quality and to aid the community in contributing to cookbooks. To learn more about our team, process, and design goals see our [team documentation](https://github.com/chef-cookbooks/community_cookbook_documentation/blob/master/COOKBOOK_TEAM.MD). To learn more about contributing to cookbooks like this see our [contributing documentation](https://github.com/chef-cookbooks/community_cookbook_documentation/blob/master/CONTRIBUTING.MD), or if you have general questions about this cookbook come chat with us in #cookbok-engineering on the [Chef Community Slack](http://community-slack.chef.io/)
+
+## License
 
 **Copyright:** 2010-2017, Chef Software, Inc.
 

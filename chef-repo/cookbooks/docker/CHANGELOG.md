@@ -2,11 +2,52 @@
 
 This file is used to list changes made in each version of the docker cookbook.
 
-## 12.15.6 (2017-05-01)
+## 2.15.17 (2017-07-18)
+- adding restart notifications to upstart and cleaning house on the configs
+- fix docker socket group being empty
+- bring systemd unit file closer to stock
+
+## 2.15.16 (2017-07-14)
+- Issue #849 Fix service restarts on OS using systemd
+
+## 2.15.15 (2017-07-10)
+- upstream systemd config no longer contains the slave mount flag
+
+## 2.15.14 (2017-07-03)
+- Simplifying kitchen config
+- Using dokken-images to speed up tests
+- Updating Amazon Linux to default to 17.03.1
+- Package helper for debian-9
+
+## 2.15.13 (2017-06-15)
+- kill_after property default value to nil
+- only use --raw-logs argument in versions which support it
+
+## 2.15.12 (2017-06-13)
+- reverting gem metadata for now as it requires build tools dependency for the json gem
+
+## 2.15.11 (2017-06-13)
+- make docker.service override match closer to stock
+
+## 2.15.10 (2017-06-13)
+- adding support for chef >= 12.8 metadata gem installs
+- using docker-api 1.33.4
+
+## 2.15.9 (2017-06-13)
+- updating systemd docker.service with changes from official docker install
+- 12.04 doesnt support docker 17.05.0
+
+## 2.15.8 (2017-06-12)
+- Bumping to latest docker version
+
+## 2.15.7 (2017-06-12)
+- Adding Ubuntu Zesty 17.04 support
+
+## 2.15.6 (2017-05-01)
 - #853 - Add network_aliases support
 - #854 - Expose package_name through the docker_service resource
 
-## 12.15.5 (2017-04-19)
+## 2.15.5 (2017-04-19)
 - Fixing up memory related API keys
 - Adding KernelMemory
 - Adding MemorySwappiness
@@ -14,33 +55,33 @@ This file is used to list changes made in each version of the docker cookbook.
 - Fixing MemorySwap convergatude (bug #833)
 - Allowing for both integer and string input for all memory values
 
-## 12.15.4 (2017-04-19)
+## 2.15.4 (2017-04-19)
 - Fixing security_opt property
 
-## 12.15.3 (2017-04-18)
+## 2.15.3 (2017-04-18)
 - Updating for 17.04.0
 
-## 12.15.2 (2017-02-15)
+## 2.15.2 (2017-02-15)
 - Reverting 12.15.1 changes
 
-## 12.15.1 (2017-02-15)
+## 2.15.1 (2017-02-15)
 - 799 - Adding service restarts to systemd template resources
 
-## 12.15.0 (2017-02-15)
+## 2.15.0 (2017-02-15)
 - Removing dependency on compat_resource.
 - Now requires Chef 12.5 or higher.
 
-## 12.14.3 (2017-02-14)
+## 2.14.3 (2017-02-14)
 - Defaulting package installation version to docker 1.13.1
 
-## 12.14.3 (2017-02-06)
+## 2.14.3 (2017-02-06)
 - Reverting gem vendor due to c extensions in json dep.
-- Using docker-api-1.33.2 in _autoload
+- Using docker-api-1.33.2 in \_autoload
 
-## 12.14.2 (2017-01-31)
+## 2.14.2 (2017-01-31)
 - Vendoring docker-api-1.33.2
 
-## 12.14.1 (2017-01-31)
+## 2.14.1 (2017-01-31)
 - defaulting to package installation on amazonlinux
 
 ## 2.14.0 (2017-01-31)

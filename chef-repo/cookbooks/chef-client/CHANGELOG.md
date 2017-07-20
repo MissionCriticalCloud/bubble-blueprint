@@ -2,6 +2,33 @@
 
 This file is used to list changes made in each version of the chef-client cookbook.
 
+## 8.1.7 (2017-07-13)
+
+- Add find_chef_client use to the task recipe so that chef_binary_path is defined.
+- Update documentation to reflect the rubygems_url usage.
+
+## 8.1.6 (2017-06-27)
+
+- Use node['chef_client']['log_file'] in all recipes and templates
+- Add new attribute for timing out systemd timer to kill off hung chef-client runs
+
+## 8.1.5 (2017-06-27)
+
+- Multiple improvements to systemd unit behavior of chef-client
+
+  - stop the timer if timer is disabled
+  - de-dupe env-file path referencing
+  - ensure env file exists before service that references it
+  - restart timer if timer changed
+
+## 8.1.4 (2017-06-21)
+
+- Fix removing the chef-client schedule task
+
+## 8.1.3 (2017-06-21)
+
+- Lazily eval the frequency so an update to interval attribute is respected when setting up a windows scheduled task
+
 ## 8.1.2 (2017-05-30)
 
 - convert timer unit to hash syntax for readability,
@@ -20,7 +47,7 @@ This file is used to list changes made in each version of the chef-client cookbo
 
 ## 8.0.2 (2017-05-02)
 
-- Remove the suggests ‘runit’ from the metadata
+- Remove the suggests 'runit' from the metadata
 - Require a more modern windows and cron cookbook
 - Make sure SLES 11 gets the right init system
 

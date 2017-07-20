@@ -70,7 +70,7 @@ action_class do
 
   def exists?(pagefile)
     @exists ||= begin
-      Chef::Log.debug("Checking if #{pagefile} exists")
+      Chef::Log.debug("Checking if #{pagefile} exists by runing: #{wmic} pagefileset where SettingID=\"#{get_setting_id(pagefile)}\" list /format:list")
       cmd = shell_out("#{wmic} pagefileset where SettingID=\"#{get_setting_id(pagefile)}\" list /format:list", returns: [0])
       cmd.stderr.empty? && (cmd.stdout =~ /SettingID=#{get_setting_id(pagefile)}/i)
     end
@@ -86,6 +86,7 @@ action_class do
 
   def create(pagefile)
     converge_by("create pagefile #{pagefile}") do
+      Chef::Log.debug("Running #{wmic} pagefileset create name=\"#{win_friendly_path(pagefile)}\"")
       cmd = shell_out("#{wmic} pagefileset create name=\"#{win_friendly_path(pagefile)}\"")
       check_for_errors(cmd.stderr)
     end
@@ -93,6 +94,7 @@ action_class do
 
   def delete(pagefile)
     converge_by("remove pagefile #{pagefile}") do
+      Chef::Log.debug("Running #{wmic} pagefileset where SettingID=\"#{get_setting_id(pagefile)}\" delete")
       cmd = shell_out("#{wmic} pagefileset where SettingID=\"#{get_setting_id(pagefile)}\" delete")
       check_for_errors(cmd.stderr)
     end
@@ -108,6 +110,7 @@ action_class do
 
   def set_automatic_managed
     converge_by('set pagefile to Automatic Managed') do
+      Chef::Log.debug("Running #{wmic} computersystem where name=\"%computername%\" set AutomaticManagedPagefile=True")
       cmd = shell_out("#{wmic} computersystem where name=\"%computername%\" set AutomaticManagedPagefile=True")
       check_for_errors(cmd.stderr)
     end
@@ -115,6 +118,7 @@ action_class do
 
   def unset_automatic_managed
     converge_by('set pagefile to User Managed') do
+      Chef::Log.debug("Running #{wmic} computersystem where name=\"%computername%\" set AutomaticManagedPagefile=False")
       cmd = shell_out("#{wmic} computersystem where name=\"%computername%\" set AutomaticManagedPagefile=False")
       check_for_errors(cmd.stderr)
     end
@@ -122,6 +126,7 @@ action_class do
 
   def set_custom_size(pagefile, min, max)
     converge_by("set #{pagefile} to InitialSize=#{min} & MaximumSize=#{max}") do
+      Chef::Log.debug("Running #{wmic} pagefileset where SettingID=\"#{get_setting_id(pagefile)}\" set InitialSize=#{min},MaximumSize=#{max}")
       cmd = shell_out("#{wmic} pagefileset where SettingID=\"#{get_setting_id(pagefile)}\" set InitialSize=#{min},MaximumSize=#{max}", returns: [0])
       check_for_errors(cmd.stderr)
     end
@@ -129,6 +134,7 @@ action_class do
 
   def set_system_managed(pagefile) # rubocop: disable Style/AccessorMethodName
     converge_by("set #{pagefile} to System Managed") do
+      Chef::Log.debug("Running #{wmic} pagefileset where SettingID=\"#{get_setting_id(pagefile)}\" set InitialSize=0,MaximumSize=0")
       cmd = shell_out("#{wmic} pagefileset where SettingID=\"#{get_setting_id(pagefile)}\" set InitialSize=0,MaximumSize=0", returns: [0])
       check_for_errors(cmd.stderr)
     end
@@ -141,12 +147,10 @@ action_class do
   end
 
   def check_for_errors(stderr)
-    Chef::Log.fatal(stderr) unless stderr.empty?
+    raise stderr.chomp unless stderr.empty?
   end
 
   def wmic
-    @wmic ||= begin
-      locate_sysnative_cmd('wmic.exe')
-    end
+    @wmic ||= locate_sysnative_cmd('wmic.exe')
   end
 end

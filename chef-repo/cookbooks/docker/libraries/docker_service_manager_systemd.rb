@@ -27,8 +27,7 @@ module DockerCookbook
         mode '0644'
         variables(
           docker_name: docker_name,
-          docker_socket: connect_socket.sub(%r{unix://|fd://}, ''),
-          docker_mount_flags: mount_flags
+          docker_daemon_cmd: docker_daemon_cmd
         )
         cookbook 'docker'
         action :create
@@ -50,6 +49,12 @@ module DockerCookbook
         not_if { docker_name == 'default' && ::File.exist?('/lib/systemd/system/docker.socket') }
       end
 
+      # restart if changes in template resources
+      execute "systemctl restart #{docker_name}" do
+        command "/bin/systemctl restart #{docker_name}"
+        action :nothing
+      end
+
       template "/etc/systemd/system/#{docker_name}.service" do
         source 'systemd/docker.service-override.erb'
         owner 'root'
@@ -57,13 +62,14 @@ module DockerCookbook
         mode '0644'
         variables(
           config: new_resource,
+          docker_name: docker_name,
           docker_daemon_cmd: docker_daemon_cmd,
           systemd_args: systemd_args,
-          docker_wait_ready: "#{libexec_dir}/#{docker_name}-wait-ready",
-          docker_mount_flags: mount_flags
+          docker_wait_ready: "#{libexec_dir}/#{docker_name}-wait-ready"
         )
         cookbook 'docker'
         notifies :run, 'execute[systemctl daemon-reload]', :immediately
+        notifies :run, "execute[systemctl restart #{docker_name}]", :immediately
         action :create
       end
 
@@ -80,6 +86,7 @@ module DockerCookbook
         )
         cookbook 'docker'
         notifies :run, 'execute[systemctl daemon-reload]', :immediately
+        notifies :run, "execute[systemctl restart #{docker_name}]", :immediately
         action :create
       end
 
