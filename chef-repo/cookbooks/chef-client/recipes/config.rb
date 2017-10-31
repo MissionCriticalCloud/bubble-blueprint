@@ -27,12 +27,11 @@ end
 
 # chef_node_name = Chef::Config[:node_name] == node['fqdn'] ? false : Chef::Config[:node_name]
 
-if node['chef_client']['log_file'].is_a?(String) && node['chef_client']['init_style'] != 'runit'
+if node['chef_client']['log_file'].is_a?(String)
   log_path = File.join(node['chef_client']['log_dir'], node['chef_client']['log_file'])
   node.default['chef_client']['config']['log_location'] = log_path
 
-  case node['platform_family']
-  when 'amazon', 'rhel', 'debian', 'fedora'
+  if node['os'] == 'linux'
     logrotate_app 'chef-client' do
       path [log_path]
       rotate node['chef_client']['logrotate']['rotate']
@@ -80,7 +79,7 @@ template "#{node['chef_client']['conf_dir']}/client.rb" do
   source 'client.rb.erb'
   owner d_owner
   group node['root_group']
-  mode '644'
+  mode '0644'
   variables(
     chef_config: node['chef_client']['config'],
     chef_requires: chef_requires,
@@ -100,7 +99,7 @@ directory ::File.join(node['chef_client']['conf_dir'], 'client.d') do
   recursive true
   owner d_owner
   group node['root_group']
-  mode '755'
+  mode '0755'
 end
 
 ruby_block 'reload_client_config' do

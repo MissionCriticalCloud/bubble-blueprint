@@ -40,18 +40,17 @@ dist_dir, conf_dir = value_for_platform_family(
   ['suse'] => %w( suse sysconfig )
 )
 
-# let's create the service file so the :disable action doesn't fail
-case node['platform_family']
-when 'debian', 'amazon', 'rhel', 'fedora', 'suse'
+# Stop any running chef-client services
+if node['os'] == 'linux'
   template '/etc/init.d/chef-client' do
     source "#{dist_dir}/init.d/chef-client.erb"
-    mode '755'
+    mode '0755'
     variables(client_bin: client_bin)
   end
 
   template "/etc/#{conf_dir}/chef-client" do
     source "#{dist_dir}/#{conf_dir}/chef-client.erb"
-    mode '644'
+    mode '0644'
   end
 
   service 'chef-client' do
@@ -59,7 +58,9 @@ when 'debian', 'amazon', 'rhel', 'fedora', 'suse'
     provider Chef::Provider::Service::Upstart if node['chef_client']['init_style'] == 'upstart'
     action [:disable, :stop]
   end
+end
 
+case node['platform_family']
 when 'openindiana', 'opensolaris', 'nexentacore', 'solaris2', 'smartos', 'omnios'
   service 'chef-client' do
     supports status: true, restart: true
@@ -73,7 +74,7 @@ when 'freebsd'
     owner 'root'
     group 'wheel'
     variables client_bin: client_bin
-    mode '755'
+    mode '0755'
   end
 
   file '/etc/rc.conf.d/chef' do

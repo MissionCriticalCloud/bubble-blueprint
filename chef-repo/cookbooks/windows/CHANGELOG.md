@@ -2,6 +2,34 @@
 
 This file is used to list changes made in each version of the windows cookbook.
 
+## 3.2.0 (2017-10-17)
+
+- Add management_tools property to windows_feature powershell provider which installs the various management tools
+- Fix deprecations_namespace_collisions
+- Add additional certificate store names
+- Add the ability to define a timeout on windows_feature
+- Multiple improvements to the font resource
+  - Improved logging, particularly debug logging
+  - Allow pulling the font from a remote location using remote_file
+  - Fix some failures in fetching local fonts
+  - Added a font_name property that allows you specify the local name of the font, which can be different from the name of the chef resource. This allows you to create more friendly resource names for your converge.
+  - Handle font resources with backslashes in their source
+- Remove source property from servermanagercmd provider as it does not support it.
+- Remove converge_by around inner powershell_script resource to stop it always reporting as changed
+- Change install feature guards to work on Windows 2008r2
+- Allow dism feature installs to work on non-English systems
+
+## 3.1.3 (2017-09-18)
+
+### windows_task and windows_path deprecation
+
+s of chef-client 13.0+ and 13.4+ windows_task and windows_path are now included in the Chef client. windows_task underwent a full rewrite that greatly improved the functionality and idempotency of the resource. We highly recommend using these new resources by upgrading to Chef 13.4 or later. If you are running these more recent Chef releases the windows_task and windows_path resources within chef-client will take precedence over those in this cookbook. In September 2018 we will release a new major version of this cookbook that removes windows_task and windows_path.
+
+
+## 3.1.2 (2017-08-14)
+
+- Revert "Require path in the share resource instead of raising if it's missing" which was causing failures due to a bug in the chef-client
+
 ## 3.1.1 (2017-06-13)
 
 - Replace Windows 7 testing with Windows 10 testing

@@ -7,44 +7,44 @@ module DockerCookbook
 
       def build_from_directory
         i = Docker::Image.build_from_dir(
-          source,
+          new_resource.source,
           {
-            'nocache' => nocache,
-            'rm' => rm,
+            'nocache' => new_resource.nocache,
+            'rm' => new_resource.rm,
           },
           connection
         )
-        i.tag('repo' => repo, 'tag' => tag, 'force' => force)
+        i.tag('repo' => new_resource.repo, 'tag' => new_resource.tag, 'force' => new_resource.force)
       end
 
       def build_from_dockerfile
         i = Docker::Image.build(
-          IO.read(source),
+          IO.read(new_resource.source),
           {
-            'nocache' => nocache,
-            'rm' => rm,
+            'nocache' => new_resource.nocache,
+            'rm' => new_resource.rm,
           },
           connection
         )
-        i.tag('repo' => repo, 'tag' => tag, 'force' => force)
+        i.tag('repo' => new_resource.repo, 'tag' => new_resource.tag, 'force' => new_resource.force)
       end
 
       def build_from_tar
         i = Docker::Image.build_from_tar(
-          ::File.open(source, 'r'),
+          ::File.open(new_resource.source, 'r'),
           {
-            'nocache' => nocache,
-            'rm' => rm,
+            'nocache' => new_resource.nocache,
+            'rm' => new_resource.rm,
           },
           connection
         )
-        i.tag('repo' => repo, 'tag' => tag, 'force' => force)
+        i.tag('repo' => new_resource.repo, 'tag' => new_resource.tag, 'force' => new_resource.force)
       end
 
       def build_image
-        if ::File.directory?(source)
+        if ::File.directory?(new_resource.source)
           build_from_directory
-        elsif ::File.extname(source) == '.tar'
+        elsif ::File.extname(new_resource.source) == '.tar'
           build_from_tar
         else
           build_from_dockerfile
@@ -52,21 +52,19 @@ module DockerCookbook
       end
 
       def image_identifier
-        "#{repo}:#{tag}"
+        "#{new_resource.repo}:#{new_resource.tag}"
       end
 
       def import_image
         with_retries do
-          i = Docker::Image.import(source, {}, connection)
-          i.tag('repo' => repo, 'tag' => tag, 'force' => force)
+          i = Docker::Image.import(new_resource.source, {}, connection)
+          i.tag('repo' => new_resource.repo, 'tag' => new_resource.tag, 'force' => new_resource.force)
         end
       end
 
       def pull_image
         with_retries do
-          registry_host = parse_registry_host(repo)
-          creds = node.run_state['docker_auth'] && node.run_state['docker_auth'][registry_host] || (node.run_state['docker_auth'] ||= {})['index.docker.io']
-
+          creds = credentails
           original_image = Docker::Image.get(image_identifier, {}, connection) if Docker::Image.exist?(image_identifier, {}, connection)
           new_image = Docker::Image.create({ 'fromImage' => image_identifier }, creds, connection)
 
@@ -76,28 +74,35 @@ module DockerCookbook
 
       def push_image
         with_retries do
+          creds = credentails
           i = Docker::Image.get(image_identifier, {}, connection)
-          i.push
+          i.push(creds, repo_tag: image_identifier)
         end
       end
 
       def remove_image
         with_retries do
           i = Docker::Image.get(image_identifier, {}, connection)
-          i.remove(force: force, noprune: noprune)
+          i.remove(force: new_resource.force, noprune: new_resource.noprune)
         end
       end
 
       def save_image
         with_retries do
-          Docker::Image.save(repo, destination, connection)
+          Docker::Image.save(new_resource.repo, new_resource.destination, connection)
         end
       end
 
       def load_image
         with_retries do
-          Docker::Image.load(source, {}, connection)
+          Docker::Image.load(new_resource.source, {}, connection)
         end
+      end
+
+      def credentails
+        registry_host = parse_registry_host(new_resource.repo)
+        creds = node.run_state['docker_auth'] && node.run_state['docker_auth'][registry_host] || (node.run_state['docker_auth'] ||= {})['index.docker.io']
+        creds
       end
     end
   end

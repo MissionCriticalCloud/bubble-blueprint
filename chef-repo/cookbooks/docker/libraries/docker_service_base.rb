@@ -16,6 +16,9 @@ module DockerCookbook
     # register with the resource resolution system
     provides :docker_service_manager
 
+    # Environment variables to docker service
+    property :env_vars, Hash
+
     # daemon management
     property :instance, String, name_property: true, required: true, desired_state: false
     property :auto_restart, Boolean, default: false
@@ -33,7 +36,7 @@ module DockerCookbook
     property :exec_opts, ArrayType
     property :fixed_cidr, [String, nil]
     property :fixed_cidr_v6, [String, nil]
-    property :group, [String], default: lazy { default_group }
+    property :group, [String], default: 'docker'
     property :graph, [String, nil]
     property :host, [String, Array], coerce: proc { |v| coerce_host(v) }
     property :icc, [Boolean, nil]
@@ -112,7 +115,7 @@ module DockerCookbook
           variables(
             docker_cmd: docker_cmd,
             libexec_dir: libexec_dir,
-            service_timeout: service_timeout
+            service_timeout: new_resource.service_timeout
           )
           cookbook 'docker'
           action :create

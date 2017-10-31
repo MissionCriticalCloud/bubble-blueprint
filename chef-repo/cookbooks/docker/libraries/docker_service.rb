@@ -31,15 +31,6 @@ module DockerCookbook
     ################
     # Helper Methods
     ################
-    def validate_install_method
-      if property_is_set?(:version) &&
-         install_method != 'binary' &&
-         install_method != 'package' &&
-         install_method != 'tarball'
-        raise Chef::Exceptions::ValidationFailed, 'Version property only supported for binary, package and tarball installation methods'
-      end
-    end
-
     def copy_properties_to(to, *properties)
       properties = self.class.properties.keys if properties.empty?
       properties.each do |p|
@@ -52,18 +43,27 @@ module DockerCookbook
     end
 
     action_class.class_eval do
+      def validate_install_method
+        if property_is_set?(:version) &&
+           new_resource.install_method != 'binary' &&
+           new_resource.install_method != 'package' &&
+           new_resource.install_method != 'tarball'
+          raise Chef::Exceptions::ValidationFailed, 'Version property only supported for binary, package and tarball installation methods'
+        end
+      end
+
       def installation(&block)
-        case install_method
+        case new_resource.install_method
         when 'auto'
-          install = docker_installation(name, &block)
+          install = docker_installation(new_resource.name, &block)
         when 'binary'
-          install = docker_installation_binary(name, &block)
+          install = docker_installation_binary(new_resource.name, &block)
         when 'script'
-          install = docker_installation_script(name, &block)
+          install = docker_installation_script(new_resource.name, &block)
         when 'package'
-          install = docker_installation_package(name, &block)
+          install = docker_installation_package(new_resource.name, &block)
         when 'tarball'
-          install = docker_installation_tarball(name, &block)
+          install = docker_installation_tarball(new_resource.name, &block)
         when 'none'
           Chef::Log.info('Skipping Docker installation. Assuming it was handled previously.')
           return
@@ -73,17 +73,17 @@ module DockerCookbook
       end
 
       def svc_manager(&block)
-        case service_manager
+        case new_resource.service_manager
         when 'auto'
-          svc = docker_service_manager(name, &block)
+          svc = docker_service_manager(new_resource.name, &block)
         when 'execute'
-          svc = docker_service_manager_execute(name, &block)
+          svc = docker_service_manager_execute(new_resource.name, &block)
         when 'sysvinit'
-          svc = docker_service_manager_sysvinit(name, &block)
+          svc = docker_service_manager_sysvinit(new_resource.name, &block)
         when 'upstart'
-          svc = docker_service_manager_upstart(name, &block)
+          svc = docker_service_manager_upstart(new_resource.name, &block)
         when 'systemd'
-          svc = docker_service_manager_systemd(name, &block)
+          svc = docker_service_manager_systemd(new_resource.name, &block)
         end
         copy_properties_to(svc)
         svc

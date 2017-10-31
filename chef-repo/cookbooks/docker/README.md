@@ -2,8 +2,6 @@
 
 [![Build Status](https://travis-ci.org/chef-cookbooks/docker.svg?branch=master)](https://travis-ci.org/chef-cookbooks/docker)
 [![Cookbook Version](https://img.shields.io/cookbook/v/docker.svg)](https://supermarket.chef.io/cookbooks/docker)
-[![Gitter](https://badges.gitter.im/Join
-Chat.svg)](https://gitter.im/someara/chef-docker?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 The Docker Cookbook is a library cookbook that provides custom
 resources for use in recipes.
@@ -15,35 +13,35 @@ container engine as distributed by Docker, Inc. It does not address
 Docker ecosystem tooling or prerequisite technology such as cgroups or
 aufs.
 
-
 ## Requirements
 
-- Chef 12.5.x or higher. Chef 11 is NOT SUPPORTED, please do not open issues about it.
-- Ruby 2.1 or higher (preferably, the Chef full-stack installer)
+- Chef 12.7 or later
 - Network accessible web server hosting the docker binary.
 - SELinux permissive/disabled if CentOS [Docker Issue #15498](https://github.com/docker/docker/issues/15498)
 
 ## Platform Support
 
-The following platforms have been tested with Test Kitchen: You may be
-able to get it working on other platforms, with appropriate
-configuration of cgroups and storage back ends.
-
-|              | 1.7.1 | 1.8.3 | 1.9.1 | 1.10.3 | 1.11.1 | 1.12.3 | 1.13.0 |
-|--------------|:-----:|:------|:-----:|:------:|:------:|:------:|:-------|
-| amazon linux |       |       |       |        |        |        | ✔      |
-| debian-7     | ✔     | ✔     | ✔     | ✔      | ✔      | ✔      | ✔      |
-| debian-8     | ✔     | ✔     | ✔     | ✔      | ✔      | ✔      | ✔      |
-| centos-7     | ✔     | ✔     | ✔     | ✔      | ✔      | ✔      | ✔      |
-| fedora       |       |       | ✔     | ✔      | ✔      | ✔      | ✔      |
-| ubuntu-12.04 | ✔     | ✔     | ✔     | ✔      | ✔      | ✔      | ✔      |
-| ubuntu-14.04 | ✔     | ✔     | ✔     | ✔      | ✔      | ✔      | ✔      |
-| ubuntu-16.04 |       |       |       |        | ✔      | ✔      | ✔      |
+- Amazon Linux
+- Debian 7/8/9
+- Fedora
+- Ubuntu 14.04/16.04
+- CentOS 7
 
 
 ## Cookbook Dependencies
 
-- [compat_resource](https://supermarket.chef.io/cookbooks/compat_resource)
+This cookbook has a loose dependency on the official docker repositories, which can be installed with [chef-apt-docker](https://supermarket.chef.io/cookbooks/chef-apt-docker) or [chef-yum-docker](https://supermarket.chef.io/cookbooks/chef-yum-docker) cookbooks. You may choose to use your OS version of docker, but you may run into issues such as the docker group being named differently.
+
+## Docker Group
+
+If you are not using the official docker repositories you may run into issues with the docker group being different. RHEL is a known issue that defaults to using `dockerroot` for the service group. Add the `group` property to the `docker_service`.
+
+```ruby
+docker_service 'default' do
+  group 'dockerroot'
+  action [:create, :start]
+end
+```
 
 ## Usage
 
@@ -74,7 +72,7 @@ The cookbooks ran under test-kitchen make excellent usage examples.
 
 The test recipes are found at:
 
-```ruby
+```
 test/cookbooks/docker_test/
 ```
 
@@ -204,6 +202,7 @@ end
 See full documentation for each resource and action below for more information.
 
 ## Resources Details
+
 ## docker_installation
 
 The `docker_installation` resource auto-selects one of the below
@@ -453,11 +452,10 @@ options found in the
 - `log_level` - Set the logging level
 - `labels` A string or array to set metadata on the daemon in the form ['foo:bar', 'hello:world']`
 - `log_driver` - Container's logging driver (json-file/syslog/journald/gelf/fluentd/none)
-- `labels` A string or array to set metadata on the daemon in the form ['foo:bar', 'hello:world']`
 - `log_driver` - Container's logging driver (json-file/syslog/journald/gelf/fluentd/awslogs/splunk/etwlogs/gcplogs/none)
 - `log_opts` - Container's logging driver options (driver-specific)
 - `mtu` - Set the containers network MTU
-- `package_name` - Set the package name. Defaults to `docker-engine`
+- `package_name` - Set the package name. Defaults to `docker-ce`
 - `pidfile` - Path to use for daemon PID file
 - `registry_mirror` - Preferred Docker registry mirror
 - `storage_driver` - Storage driver to use
@@ -782,6 +780,15 @@ end
 docker_container 'env' do
   repo 'debian'
   env ['PATH=/usr/bin', 'FOO=bar']
+  command 'env'
+  action :run
+end
+```
+
+```ruby
+docker_container 'env_files' do
+  repo 'debian'
+  env_file lazy { ['/env_file1', '/env_file2'] }
   command 'env'
   action :run
 end
@@ -1147,6 +1154,7 @@ Most `docker_container` properties are the `snake_case` version of the `CamelCas
 - `domain_name` - Set's the container's dnsdomainname as returned by the `dnsdomainname` command.
 - `entrypoint` - Set the entry point for the container as a string or an array of strings.
 - `env` - Set environment variables in the container in the form `['FOO=bar', 'BIZ=baz']`
+- `env_file` - Read environment variables from a file and set in the container. Accepts an Array or String to the file location. lazy evaluator must be set if the file passed is created by Chef.
 - `extra_hosts` - An array of hosts to add to the container's `/etc/hosts` in the form `['host_a:10.9.8.7', 'host_b:10.9.8.6']`
 - `force` - A boolean to use in container operations that support a `force` option. Defaults to `false`
 - `host` - A string containing the host the API should communicate with. Defaults to ENV['DOCKER_HOST'] if set
@@ -1155,6 +1163,7 @@ Most `docker_container` properties are the `snake_case` version of the `CamelCas
 - `links` - An array of source container/alias pairs to link the container to in the form `[container_a:www', container_b:db']`
 - `log_driver` - Sets a custom logging driver for the container (json-file/syslog/journald/gelf/fluentd/none).
 - `log_opts` - Configures the above logging driver options (driver-specific).
+- `init` - Run an init inside the container that forwards signals and reaps processes.
 - `ip_address` - Container IPv4 address (e.g. 172.30.100.104)
 - `mac_address` - The mac address for the container to use.
 - `memory` - Memory limit in bytes.
@@ -1171,7 +1180,7 @@ Most `docker_container` properties are the `snake_case` version of the `CamelCas
 - `restart_policy` - One of `no`, `on-failure`, `unless-stopped`, or `always`. Use `always` if you want a service container to survive a Dockerhost reboot. Defaults to `no`.
 - `restart_maximum_retry_count` - Maximum number of restarts to try when `restart_policy` is `on-failure`. Defaults to an ever increasing delay (double the previous delay, starting at 100mS), to prevent flooding the server.
 - `running_wait_time` - Amount of seconds `docker_container` wait to determine if a process is running.`
-- `security_opts` - A list of string values to customize labels for MLS systems, such as SELinux.
+- `security_opt` - A list of string values to customize labels for MLS systems, such as SELinux.
 - `signal` - The signal to send when using the `:kill` action. Defaults to `SIGTERM`.
 - `sysctls` - A hash of sysctls to set on the container. Defaults to `{}`.
 - `tty` - Boolean value to allocate a pseudo-TTY. Defaults to `false`.
@@ -1202,7 +1211,7 @@ Most `docker_container` properties are the `snake_case` version of the `CamelCas
 - `:run` - The default action. Both `:create` and `:start` the container in one action. Redeploys the container on resource change.
 - `:run_if_missing` - Runs a container only once.
 - `:stop` - Stops the container.
-- `:restart` - Stops the starts the container.
+- `:restart` - Stops and then starts the container.
 - `:kill` - Send a signal to the container process. Defaults to `SIGKILL`.
 - `:pause` - Pauses the container.
 - `:unpause` - Unpauses the container.
@@ -1408,12 +1417,9 @@ Please see contributing information in:
 
 - Sean OMeara ([sean@sean.io](mailto:sean@sean.io))
 - Brian Flad ([bflad417@gmail.com](mailto:bflad417@gmail.com))
-- Tom Duffield (<http://tomduffield.com>)
-- Fletcher Nichol ([fnichol@nichol.ca](mailto:fnichol@nichol.ca))
 - Chase Bolt ([chase.bolt@gmail.com](mailto:chase.bolt@gmail.com))
 
 ## License
-
 
 **Copyright:** 2015-2017, Chef Software, Inc.
 

@@ -45,10 +45,6 @@ module DockerCookbook
         "docker-#{name}"
       end
 
-      def default_group
-        platform?('redhat') ? 'dockerroot' : 'docker'
-      end
-
       def installed_docker_version
         o = shell_out("#{docker_bin} --version")
         o.stdout.split[2].chomp(',')
@@ -80,6 +76,7 @@ module DockerCookbook
 
       def connect_socket
         return "/var/run/#{docker_name}.sock" unless host
+        return nil if host.grep(%r{unix://|fd://}).empty?
         sorted = coerce_host(host).sort do |a, b|
           c_a = 1 if a =~ /^unix:/
           c_a = 2 if a =~ /^fd:/
@@ -89,7 +86,7 @@ module DockerCookbook
           c_b = 3 unless c_b
           c_a <=> c_b
         end
-        sorted.first
+        sorted.first.sub(%r{unix://|fd://}, '')
       end
 
       def coerce_host(v)
@@ -206,7 +203,7 @@ module DockerCookbook
         opts << "--log-level=#{log_level}" if log_level
         labels.each { |l| opts << "--label=#{l}" } if labels
         opts << "--log-driver=#{log_driver}" if log_driver
-        log_opts.each { |log_opt| opts << "--log-opt #{log_opt}" } if log_opts
+        log_opts.each { |log_opt| opts << "--log-opt '#{log_opt}'" } if log_opts
         opts << "--mtu=#{mtu}" if mtu
         opts << "--pidfile=#{pidfile}" if pidfile
         opts << "--registry-mirror=#{registry_mirror}" if registry_mirror

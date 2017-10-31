@@ -2,6 +2,43 @@
 
 This file is used to list changes made in each version of the chef-client cookbook.
 
+## 9.0.0 (2017-10-23)
+
+### Breaking changes
+
+We have removed the previously deprecated support for running chef-client as a Windows service and running under the runit init system on Linux. Windows hosts should run chef-client as a scheduled task which resolves many issues with long running chef-client processes as a service. For Linux users we highly recommend using the native init systems within your distribution as they provide a higher level of platform support, reliability, and logging integration. For both of these changes we will not be including an automatic migration solution as doing so can prove to be problematic for many users. We recommend stopping the existing chef client and then manually running chef client to create the new service or scheduled task. That may be accomplished using knife ssh, push-jobs, or other tooling within your environment.
+
+### Other Changes
+
+- Add ability to set daemonized SSL trust store
+- Add attributes for setting chkconfig start and stop time values in sys-v scripts
+- Setup log rotate on any Linux release not just Amazon, RHEL, Debian and Fedora platform families
+- In the cron recipe make sure we cleanup the sys-v script and and stop the service on any Linux platform not just Amazon, RHEL, Debian and Fedora platform families
+- Add ability to set daemonized SSL trust store.
+- Fix exception when log_level is already a symbol when building the client.rb file
+- Initialize handler attributes to empty arrays
+- Add Clear Linux support
+- Fix loading of the solaris service config
+- Provide better error messages if the wrong frequency is provided to the scheduled task resource or recipe
+- Use full file modes in all recipes
+- Add ability to set frequency modifier on the chef-client Windows task as a string instead of just an integer
+- Add Travis CI testing of both Chef 12 and 13
+- Add Windows 2016 and SLES 11 testing to local Test Kitchen
+
+## 8.1.8 (2017-08-06)
+
+- Add testing for Amazon Linux and Debian 9 in Travis and switch all testing to the dokken images
+- Consolidate duplicate attributes to simplify the attributes file
+- Remove leftover template file for Arch Linux
+- Don't use deprecated Ruby exists? method
+- Move testing to a test recipe that looks more like how a user would write a wrapper cookbook
+- Move the resource cloning spec recipe into the test recipe so we don't ship it to clients
+- Remove the metadata for the deprecated windows service
+- Simplify the platform logic in the init service recipe and expand the specs for this logic
+- Use resource_name not provides in the scheduled task resource
+- Remove docs for the pre-Chef 12.4 syslog functionality
+- Point users to chef_client_updater not omnibus_updater in the docs
+
 ## 8.1.7 (2017-07-13)
 
 - Add find_chef_client use to the task recipe so that chef_binary_path is defined.

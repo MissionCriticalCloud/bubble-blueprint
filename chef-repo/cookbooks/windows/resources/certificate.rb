@@ -23,7 +23,7 @@ include Windows::Helper
 property :source, String, name_property: true, required: true
 property :pfx_password, String
 property :private_key_acl, Array
-property :store_name, String, default: 'MY', regex: /^(?:MY|CA|ROOT|TrustedPublisher|TRUSTEDPEOPLE)$/
+property :store_name, String, default: 'MY', equal_to: ['TRUSTEDPUBLISHER', 'TrustedPublisher', 'CLIENTAUTHISSUER', 'REMOTE DESKTOP', 'ROOT', 'TRUSTEDDEVICES', 'WEBHOSTING', 'CA', 'AUTHROOT', 'TRUSTEDPEOPLE', 'MY', 'SMARTCARDROOT', 'TRUST', 'DISALLOWED']
 property :user_store, [true, false], default: false
 
 action :create do
@@ -35,13 +35,11 @@ action :create do
   guard_script = cert_script(false) <<
                  cert_exists_script(hash)
 
-  converge_by("adding certificate #{new_resource.source} into #{new_resource.store_name} to #{cert_location}\\#{new_resource.store_name}") do
-    powershell_script new_resource.name do
-      guard_interpreter :powershell_script
-      convert_boolean_return true
-      code code_script
-      not_if guard_script
-    end
+  powershell_script "adding certificate #{new_resource.source} into #{new_resource.store_name} to #{cert_location}\\#{new_resource.store_name}" do
+    guard_interpreter :powershell_script
+    convert_boolean_return true
+    code code_script
+    not_if guard_script
   end
 end
 
@@ -60,13 +58,11 @@ action :acl_add do
   code_script << acl_script(hash)
   guard_script << cert_exists_script(hash)
 
-  converge_by("setting the acls on #{new_resource.source} in #{cert_location}\\#{new_resource.store_name}") do
-    powershell_script new_resource.name do
-      guard_interpreter :powershell_script
-      convert_boolean_return true
-      code code_script
-      only_if guard_script
-    end
+  powershell_script "setting the acls on #{new_resource.source} in #{cert_location}\\#{new_resource.store_name}" do
+    guard_interpreter :powershell_script
+    convert_boolean_return true
+    code code_script
+    only_if guard_script
   end
 end
 
@@ -90,13 +86,11 @@ foreach ($c in #{cert_command})
 EOH
   end
   guard_script = "@(#{cert_command}).Count -gt 0\n"
-  converge_by("Removing certificate #{new_resource.source} from #{cert_location}\\#{new_resource.store_name}") do
-    powershell_script new_resource.name do
-      guard_interpreter :powershell_script
-      convert_boolean_return true
-      code code_script
-      only_if guard_script
-    end
+  powershell_script "Removing certificate #{new_resource.source} from #{cert_location}\\#{new_resource.store_name}" do
+    guard_interpreter :powershell_script
+    convert_boolean_return true
+    code code_script
+    only_if guard_script
   end
 end
 
